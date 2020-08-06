@@ -1,0 +1,25 @@
+{
+	"MSBuild": {
+		"UseLegacySdkResolver": true
+	},
+	"RoslynExtensionsOptions": {
+		"enableAnalyzersSupport": true
+	},
+	"FormattingOptions": {
+		"NewLineForCatch": false,
+		"NewLineForElse": false,
+		"NewLineForFinally": false,
+		"IndentSwitchCaseSection": false,
+		"IndentBlock": true,
+		"IndentSwitchSection": true,
+		"NewLinesForBracesInMethods": false,
+		"NewLinesForBracesInAccessors": false,
+		"NewLineForMembersInObjectInit": true,
+		"NewLinesForBracesInControlBlocks": false,
+		"NewLinesForBracesInLambdaExpressionBody": false,
+		"NewLinesForBracesInProperties": false,
+		"NewLinesForBracesInTypes": false,
+		"NewLinesForBracesInObjectCollectionArrayInitializers": false,
+		"UseTabs": true
+	}
+}
