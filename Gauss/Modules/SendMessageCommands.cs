@@ -10,8 +10,8 @@ using DSharpPlus.Entities;
 
 
 namespace Gauss.Commands {
-    public class SendMessageModule: BaseCommandModule {
-        [Command("episode")]
+    public class SendMessageCommands: BaseCommandModule {
+        [Command("send")]
         public async Task SendMessage(CommandContext context){
             await context.RespondAsync("This feature is not yet implemented.");
         }
