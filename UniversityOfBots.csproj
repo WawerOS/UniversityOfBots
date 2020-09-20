@@ -8,8 +8,8 @@
   </PropertyGroup>
 
 <ItemGroup>
-  <PackageReference Include="DSharpPlus.Interactivity" Version="4.0.0-nightly-00685" />
-    <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00685" />
-    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.0-nightly-00685" />
+  <PackageReference Include="DSharpPlus.Interactivity" Version="4.0.0-nightly-00724" />
+    <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00724" />
+    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.0-nightly-00724" />
   </ItemGroup>
 </Project>
