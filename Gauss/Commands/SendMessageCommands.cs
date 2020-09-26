@@ -50,11 +50,22 @@ namespace Gauss.Commands {
 			[Description("Your message")]
 			[RemainingText] string message
 		) {
+			if (context.User.IsBot) {
+				return;
+			}
+
 			var guild = context.GetGuild();
 			var sendingMember = guild.Members[context.User.Id];
 			var receivingMember = guild.FindMember(receiver);
+
 			if (receivingMember == null) {
 				await context.RespondAsync($"Could not find '{receiver}'.");
+				return;
+			} else if (receivingMember.IsBot) {
+				await context.RespondAsync($"You can't message bots with this command.");
+				return;
+			} else if (receivingMember.Id == context.User.Id) {
+				return;
 			}
 
 			MessageUserConfig receiverSettings;
@@ -74,10 +85,11 @@ namespace Gauss.Commands {
 
 		[Description("Disable / enable receiving DMs via the send command. Only affects you.")]
 		[Command("send_disableDMs")]
+		[Aliases("send_blockDMs")]
 		public async Task BlockDMs(
 			CommandContext context,
 			[Description("Block DMs (true) or allow them (false)")]
-			bool block = false
+			bool block = true
 		) {
 			MessageUserConfig userConfig;
 			lock (_dbContext) {
@@ -103,7 +115,7 @@ namespace Gauss.Commands {
 				}
 			}
 			if (userConfig.BlockDMs) {
-				await context.RespondAsync($"You no longer receive DMs via the `send_dm` command.");
+				await context.RespondAsync($"You will no longer receive DMs via the `send_dm` command.");
 			} else {
 				await context.RespondAsync($"You can now receive DMs via the `send_dm` command again.");
 			}
