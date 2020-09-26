@@ -6,13 +6,15 @@
 
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Gauss.Models;
 using Gauss.Utilities;
 using static System.Environment;
 
 namespace Gauss {
 	public class Program {
-		static void Main(string[] args) {
+		private static GaussBot BotInstance;
+		public async static Task Main(string[] args) {
 			string configDirectory = Path.Join(GetFolderPath(SpecialFolder.UserProfile), "GaussBot");
 
 			if (args.Length > 0 && args[0] == "--configDir") {
@@ -26,11 +28,14 @@ namespace Gauss {
 			}
 			GaussConfig config = JsonUtility.Deserialize<GaussConfig>(Path.Join(configDirectory, "config.json"));
 
+			BotInstance = new GaussBot(config);
+			BotInstance.Connect();
+			await Task.Delay(-1);
+		}
 
-			var bot = new GaussBot(config);
-			bot.Connect();
-			Console.ReadKey();
-			bot.Disconnect();
+
+		private static void HandleExit(object sender, EventArgs e) {
+			BotInstance.Disconnect();
 		}
 	}
 }
