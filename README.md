@@ -1,4 +1,4 @@
-# University of Bayes bot workshop.
+# University of Bayes Bot
 
 ## References:
 
@@ -24,8 +24,6 @@
 
 
 ### Suggested reading:
-
-TODO: Find material and or collect links and notes.
 
 * If you want a book on C#, "C# in Depth" by Jon Skeet is probably worth looking into. Though i haven't read it myself.
 
