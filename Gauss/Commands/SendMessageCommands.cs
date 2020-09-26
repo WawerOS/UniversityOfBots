@@ -18,14 +18,26 @@ namespace Gauss.Commands {
 	[NotBot]
 	public class SendMessageCommands : BaseCommandModule {
 		protected static readonly MessageDataContext _dbContext;
+		private readonly GaussConfig _config;
 
 		static SendMessageCommands() {
 			_dbContext = new MessageDataContext();
 		}
 
+		public SendMessageCommands(GaussConfig config) {
+			this._config = config;
+		}
+
+
 		[RequireAdmin]
 		[Group("admin")]
 		public class MessageAdmin : BaseCommandModule {
+			private readonly GaussConfig _config;
+
+			public MessageAdmin(GaussConfig config) {
+				this._config = config;
+			}
+
 			[Command("restrict")]
 			[Aliases("ban")]
 			[Description("TODO")]
@@ -64,6 +76,16 @@ namespace Gauss.Commands {
 					}
 				}
 				await context.RespondAsync($"'{user}' can now use send command again.");
+			}
+
+			[Command("dms")]
+			public async Task ToggleDMs(CommandContext context, bool enable) {
+				this._config.AnonymousDMs = enable;
+				this._config.Save();
+
+				await context.RespondAsync(
+					$"Sending anonymous DMs is now {(enable ? "enabled" : "disabled.")}"
+				);
 			}
 		}
 
@@ -113,6 +135,11 @@ namespace Gauss.Commands {
 			if (context.User.IsBot) {
 				return;
 			}
+			if (this._config.AnonymousDMs == false) {
+				await context.RespondAsync("Sending DMs is currently disabled.");
+				return;
+			}
+
 			bool notAllowed;
 			lock (_dbContext) {
 				notAllowed = _dbContext.RestrictedUsers.Any(y => y.UserId == context.User.Id);

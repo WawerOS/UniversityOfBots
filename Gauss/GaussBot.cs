@@ -12,6 +12,7 @@ using DSharpPlus.CommandsNext;
 using Gauss.Commands;
 using Gauss.Models;
 using Gauss.Modules;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Gauss {
@@ -26,12 +27,17 @@ namespace Gauss {
 			this._client = new DiscordClient(new DiscordConfiguration {
 				Token = config.DiscordToken,
 			});
+			var commandDependencies = new ServiceCollection()
+				.AddSingleton(this._config)
+				.BuildServiceProvider();
 
 			var commandConfig = new CommandsNextConfiguration {
 				StringPrefixes = new List<string>() { _config.CommandPrefix },
 				EnableDms = true,
+				Services = commandDependencies,
 				EnableMentionPrefix = true,
 			};
+
 			this._client.UseCommandsNext(commandConfig);
 			this._commands = this._client.GetCommandsNext();
 			this._commands.RegisterCommands<SendMessageCommands>();

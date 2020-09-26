@@ -13,6 +13,7 @@ using Gauss.Utilities;
 namespace Gauss.Models {
 	public class GaussConfig {
 		private static GaussConfig _instance;
+		private static string directory;
 
 		[JsonProperty("discord_token")]
 		public string DiscordToken { get; set; }
@@ -29,7 +30,8 @@ namespace Gauss.Models {
 		[JsonProperty("admin_roles")]
 		public List<ulong> AdminRoles { get; set; }
 
-
+		[JsonProperty("anonymousDMs")]
+		public bool AnonymousDMs { get; set; } = true;
 
 		public GaussConfig() {
 
@@ -43,6 +45,7 @@ namespace Gauss.Models {
 		}
 
 		public static GaussConfig GetInstance(string configDirectory) {
+			directory = configDirectory;
 			if (_instance == null) {
 				if (!Directory.Exists(configDirectory)) {
 					throw new Exception($"Config directory '{configDirectory}' does not exist.");
@@ -53,7 +56,12 @@ namespace Gauss.Models {
 
 				_instance = JsonUtility.Deserialize<GaussConfig>(Path.Join(configDirectory, "config.json"));
 			}
+			Console.WriteLine(_instance.AnonymousDMs);
 			return _instance;
+		}
+
+		public void Save() {
+			JsonUtility.Serialize<GaussConfig>(Path.Join(directory, "config.json"), this);
 		}
 	}
 }
