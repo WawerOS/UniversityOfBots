@@ -4,23 +4,73 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 **/
 
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using Gauss.CommandAttributes;
 using Gauss.Models;
 using Gauss.Utilities;
 
 namespace Gauss.Commands {
+	[Group("send")]
+	[NotBot]
 	public class SendMessageCommands : BaseCommandModule {
-		private readonly MessageDataContext _dbContext;
+		protected static readonly MessageDataContext _dbContext;
 
-		public SendMessageCommands() {
-			this._dbContext = new MessageDataContext();
+		static SendMessageCommands() {
+			_dbContext = new MessageDataContext();
 		}
 
+		[RequireAdmin]
+		[Group("admin")]
+		public class MessageAdmin : BaseCommandModule {
+			[Command("restrict")]
+			[Aliases("ban")]
+			[Description("TODO")]
+			public async Task BanUser(CommandContext context, string user) {
+				var guild = context.GetGuild();
+				var userId = guild.FindMember(user).Id;
+				MessageRestrictedUser existingRestriction;
+				lock (_dbContext) {
+					existingRestriction = _dbContext.RestrictedUsers.FirstOrDefault(y => y.UserId == userId);
+				}
+				if (existingRestriction == null) {
+					lock (_dbContext) {
+						_dbContext.Add(new MessageRestrictedUser() {
+							UserId = userId,
+							RestrictionEnd = null,
+						});
+						_dbContext.SaveChanges();
+					}
+				}
+
+				await context.RespondAsync($"'{user}' is now indefinetly restricted from using the send command.");
+			}
+
+			[Command("unrestrict")]
+			[Aliases("unban")]
+			[Description("TODO")]
+			public async Task UnbanUser(CommandContext context, string user) {
+				var guild = context.GetGuild();
+				var userId = guild.FindMember(user).Id;
+				MessageRestrictedUser existingRestriction;
+				lock (_dbContext) {
+					existingRestriction = _dbContext.RestrictedUsers.FirstOrDefault(y => y.UserId == userId);
+					if (existingRestriction != null) {
+						_dbContext.RestrictedUsers.Remove(existingRestriction);
+						_dbContext.SaveChanges();
+					}
+				}
+				await context.RespondAsync($"'{user}' can now use send command again.");
+			}
+		}
+
+
 		[Description("Send a message anonymously through the bot to a channel")]
-		[Command("send")]
+		[GroupCommand]
+		[Command("channel")]
 		public async Task SendMessage(
 			CommandContext context,
 			[Description("Name of the channel you want to post in.")]
@@ -28,9 +78,18 @@ namespace Gauss.Commands {
 			[Description("Your message")]
 			[RemainingText] string message
 		) {
+			bool notAllowed;
+			lock (_dbContext) {
+				notAllowed = _dbContext.RestrictedUsers.Any(y => y.UserId == context.User.Id);
+			}
+			if (notAllowed) {
+				await context.RespondAsync("You are not allowed to use this command.");
+				return;
+			}
 			var guild = context.GetGuild();
 			var member = guild.Members[context.User.Id];
 			var channel = guild.Channels.Values.SingleOrDefault(y => y.Name == channelName);
+
 			if (channel != null) {
 				if (channel.PermissionsFor(member).HasFlag(DSharpPlus.Permissions.SendMessages)) {
 					await channel.SendMessageAsync(message);
@@ -42,7 +101,8 @@ namespace Gauss.Commands {
 			}
 		}
 
-		[Command("send_dm")]
+		[Command("dm")]
+		[Description("Send an anonymous message to another guild member via DM.")]
 		public async Task SendDM(
 			CommandContext context,
 			[Description("Name or @mention of the user you want to message.")]
@@ -51,6 +111,14 @@ namespace Gauss.Commands {
 			[RemainingText] string message
 		) {
 			if (context.User.IsBot) {
+				return;
+			}
+			bool notAllowed;
+			lock (_dbContext) {
+				notAllowed = _dbContext.RestrictedUsers.Any(y => y.UserId == context.User.Id);
+			}
+			if (notAllowed) {
+				await context.RespondAsync("You are not allowed to use this command.");
 				return;
 			}
 
@@ -84,8 +152,8 @@ namespace Gauss.Commands {
 
 
 		[Description("Disable / enable receiving DMs via the send command. Only affects you.")]
-		[Command("send_disableDMs")]
-		[Aliases("send_blockDMs")]
+		[Command("disableDMs")]
+		[Aliases("blockDMs")]
 		public async Task BlockDMs(
 			CommandContext context,
 			[Description("Block DMs (true) or allow them (false)")]
@@ -94,7 +162,7 @@ namespace Gauss.Commands {
 			MessageUserConfig userConfig;
 			lock (_dbContext) {
 				userConfig =
-					(from config in this._dbContext.UserSettings
+					(from config in _dbContext.UserSettings
 					 where config.UserId == context.User.Id
 					 select config).FirstOrDefault();
 			}

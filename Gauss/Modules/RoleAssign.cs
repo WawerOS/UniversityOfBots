@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using Gauss.Models;
-using DSharpPlus.Entities;
-using System.Collections.Generic;
 
 namespace Gauss.Modules {
 	public class RoleAssign {

@@ -8,7 +8,6 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Gauss.Models;
-using Gauss.Utilities;
 using static System.Environment;
 
 namespace Gauss {
@@ -20,13 +19,7 @@ namespace Gauss {
 			if (args.Length > 0 && args[0] == "--configDir") {
 				configDirectory = args[1];
 			}
-			if (!Directory.Exists(configDirectory)) {
-				throw new Exception($"Config directory '{configDirectory}' does not exist.");
-			}
-			if (!File.Exists(Path.Join(configDirectory, "config.json"))) {
-				throw new Exception($"'config.json' was not found in '{configDirectory}'.");
-			}
-			GaussConfig config = JsonUtility.Deserialize<GaussConfig>(Path.Join(configDirectory, "config.json"));
+			GaussConfig config = GaussConfig.GetInstance(configDirectory);
 
 			BotInstance = new GaussBot(config);
 			BotInstance.Connect();
