@@ -4,6 +4,7 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 **/
 
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Gauss.Models {
@@ -16,6 +17,9 @@ namespace Gauss.Models {
 
 		[JsonProperty("assign_roles")]
 		public ulong AutoAssignedRole { get; set; }
+
+		[JsonProperty("voice_notification_categories")]
+		public List<ulong> VoiceNotificationCategories {get; set;}
 
 	}
 }

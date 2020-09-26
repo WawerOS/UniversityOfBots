@@ -26,7 +26,7 @@ namespace Gauss.Commands {
 			var channel = guild.Channels.Values.SingleOrDefault(y => y.Name == channelName);
 			if (channel != null) {
                 if (channel.PermissionsFor(member).HasFlag(DSharpPlus.Permissions.SendMessages)){
-                    await channel.SendMessageAsync($"Anonymous says: {message}");
+                    await channel.SendMessageAsync(message);
                 }else{
                     await channel.SendMessageAsync($"Can't send your message to {channel.Name}.");
                 }

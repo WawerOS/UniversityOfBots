@@ -6,6 +6,7 @@
 **/
 
 using System.Linq;
+using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
@@ -21,6 +22,14 @@ namespace Gauss.Utilities {
 					);
 			} 
 			return context.Guild;
+		}
+
+		public static async Task<DiscordChannel> GetDMChannel(this CommandContext context){
+			if (context.Channel.IsPrivate){
+				return context.Channel;
+			}
+			var guild = context.GetGuild();
+			return await guild.Members[context.User.Id]?.CreateDmChannelAsync();
 		}
 	}
 }
