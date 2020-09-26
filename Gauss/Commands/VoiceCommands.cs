@@ -64,7 +64,6 @@ namespace Gauss.Commands {
 			}
 			VCModule.SaveConfig();
 
-			Console.WriteLine("AddVoxNotification(), calling GetSetings");
 			await context.RespondAsync(
 				$"Notifications {(config.IsActive ? "active" : "inactive")}. " +
 				$"Minimum discord status: {config.TargetStatus}. " +
@@ -171,7 +170,7 @@ namespace Gauss.Commands {
 				foreach (var username in users) {
 					var user = guild.Members.Values.FirstOrDefault(member => member.Username.ToLower() == username.ToLower());
 					if (user != null && !config.TargetUsers.Any(y => y.UserId == user.Id)) {
-						config.TargetUsers.Add( new FilterEntry(){
+						config.TargetUsers.Add(new FilterEntry() {
 							UserId = user.Id,
 							Username = user.Username
 						});

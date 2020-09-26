@@ -36,11 +36,11 @@ namespace Gauss {
 			this._commands = this._client.GetCommandsNext();
 			this._commands.RegisterCommands<SendMessageCommands>();
 			// this._commands.RegisterCommands<VoiceCommands>();
-			
+
 			// this._modules.Add(new RoleAssign(this._client, _config));
 			this._modules.Add(new VCModule(this._client, this._config));
 			this._commands.CommandErrored += this.Commands_CommandErrored;
-		}	
+		}
 
 		private Task Commands_CommandErrored(CommandErrorEventArgs e) {
 			if (string.IsNullOrEmpty(e.Command?.QualifiedName)) {
@@ -50,12 +50,12 @@ namespace Gauss {
 			e.Context.Client.Logger.Log(
 				LogLevel.Error,
 				$"Someone tried executing '{e.Command?.QualifiedName ?? "<unknown command>"}' but it errored: {e.Exception}",
-			
+
 				DateTime.Now
 			);
 			return Task.CompletedTask;
 		}
-		
+
 		public void Connect() {
 			Task.Run(() => this._client.ConnectAsync());
 		}
