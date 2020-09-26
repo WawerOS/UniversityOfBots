@@ -74,7 +74,7 @@ namespace Gauss.Commands {
 									where settings.UserId == receivingMember.Id
 									select settings).SingleOrDefault();
 			}
-			if (receiverSettings.BlockDMs) {
+			if (receiverSettings != null && receiverSettings.BlockDMs) {
 				await context.RespondAsync($"Can't send your message to {receiver}.");
 			} else {
 				var channel = await receivingMember.CreateDmChannelAsync();
