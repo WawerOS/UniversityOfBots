@@ -1,7 +1,8 @@
 {
-    "discord_token": "asdjaskdjaksdjkad",
-    "command_prefix": "!",
-    "assign_roles": [
-        713479496916926528
+    "discord_token": "ADD TOKEN HERE.",
+    "command_prefix": "!g",
+    "assign_roles": 757276268319473806,
+    "voice_notification_categories": [
+        713516226806022214
     ]
 }
