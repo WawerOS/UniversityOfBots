@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
 using Gauss.Commands;
 using Gauss.Models;
 using Gauss.Modules;
@@ -46,6 +48,17 @@ namespace Gauss {
 			// this._modules.Add(new RoleAssign(this._client, _config));
 			this._modules.Add(new VCModule(this._client, this._config));
 			this._commands.CommandErrored += this.Commands_CommandErrored;
+
+			this._client.Ready += this.OnClientReady;
+		}
+
+		private Task OnClientReady(ReadyEventArgs e) {
+			return Task.Run(async () => {
+				if (string.IsNullOrEmpty(this._config.StatusText)) {
+					return;
+				}
+				await this._client.UpdateStatusAsync(new DiscordActivity(this._config.StatusText, ActivityType.Playing));
+			});
 		}
 
 		private Task Commands_CommandErrored(CommandErrorEventArgs e) {

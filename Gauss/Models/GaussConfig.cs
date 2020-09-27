@@ -33,6 +33,9 @@ namespace Gauss.Models {
 		[JsonProperty("anonymousDMs")]
 		public bool AnonymousDMs { get; set; } = true;
 
+		[JsonProperty("status_text")]
+		public string StatusText { get; set; }
+
 		public GaussConfig() {
 
 		}
