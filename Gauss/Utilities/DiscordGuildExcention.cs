@@ -26,5 +26,22 @@ namespace Gauss.Utilities {
 			}
 			return null;
 		}
+
+		public static DiscordChannel FindChannel(this DiscordGuild guild, string query) {
+			var channel = guild.Channels.Values.SingleOrDefault(
+				y => y.Type != ChannelType.Voice && y.Name.ToLower() == query.ToLower()
+			);
+			if (channel != null) {
+				return channel;
+			}
+			var partialMatches = guild.Channels.Values.Where(
+				y => y.Type != ChannelType.Voice && y.Name.ToLower().StartsWith(query.ToLower())
+			);
+			if (partialMatches.Count() == 1) {
+				return partialMatches.First();
+			}
+
+			return null;
+		}
 	}
 }

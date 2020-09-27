@@ -59,7 +59,6 @@ namespace Gauss.Models {
 
 				_instance = JsonUtility.Deserialize<GaussConfig>(Path.Join(configDirectory, "config.json"));
 			}
-			Console.WriteLine(_instance.AnonymousDMs);
 			return _instance;
 		}
 

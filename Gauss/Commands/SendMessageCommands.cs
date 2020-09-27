@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
 using Gauss.CommandAttributes;
 using Gauss.Models;
 using Gauss.Utilities;
@@ -108,13 +109,18 @@ namespace Gauss.Commands {
 				await context.RespondAsync("You are not allowed to use this command.");
 				return;
 			}
+			if (string.IsNullOrWhiteSpace(message)) {
+				await context.RespondAsync("You must specify a message.");
+				return;
+			}
 			var guild = context.GetGuild();
 			var member = guild.Members[context.User.Id];
-			var channel = guild.Channels.Values.SingleOrDefault(y => y.Name == channelName);
+			var channel = guild.FindChannel(channelName);
 
 			if (channel != null) {
 				if (channel.PermissionsFor(member).HasFlag(DSharpPlus.Permissions.SendMessages)) {
 					await channel.SendMessageAsync(message);
+					await context.Message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
 				} else {
 					await channel.SendMessageAsync($"Can't send your message to {channel.Name}.");
 				}
@@ -137,6 +143,10 @@ namespace Gauss.Commands {
 			}
 			if (this._config.AnonymousDMs == false) {
 				await context.RespondAsync("Sending DMs is currently disabled.");
+				return;
+			}
+			if (string.IsNullOrWhiteSpace(message)) {
+				await context.RespondAsync("You must specify a message.");
 				return;
 			}
 
