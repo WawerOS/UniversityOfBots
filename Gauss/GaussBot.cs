@@ -36,6 +36,12 @@ namespace Gauss {
 			var commandConfig = new CommandsNextConfiguration {
 				StringPrefixes = new List<string>() { _config.CommandPrefix },
 				EnableDms = true,
+				PrefixResolver = (message) => {
+					if (message.Channel.IsPrivate) {
+						return Task.FromResult(0);
+					}
+					return Task.FromResult(-1);
+				},
 				Services = commandDependencies,
 				EnableMentionPrefix = true,
 			};
@@ -43,6 +49,7 @@ namespace Gauss {
 			this._client.UseCommandsNext(commandConfig);
 			this._commands = this._client.GetCommandsNext();
 			this._commands.RegisterCommands<SendMessageCommands>();
+
 			// this._commands.RegisterCommands<VoiceCommands>();
 
 			// this._modules.Add(new RoleAssign(this._client, _config));
