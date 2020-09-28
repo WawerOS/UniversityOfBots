@@ -8,13 +8,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using Gauss.Database;
 using Gauss.Models;
 using Gauss.Utilities;
 
 namespace Gauss.CommandAttributes {
 	public class RequireAdmin : CheckBaseAttribute {
 		private readonly GaussConfig _config;
-
+		private GuildSettingsContext _context = null;
+		
 		public RequireAdmin() {
 			this._config = GaussConfig.GetInstance();
 		}
@@ -23,14 +25,20 @@ namespace Gauss.CommandAttributes {
 			if (help) {
 				return Task.FromResult(true);
 			}
-			if (this._config.AdminRoles == null || this._config.AdminRoles.Count == 0) {
-				return Task.FromResult(false);
-			}
+
 			var guild = context.GetGuild();
+			var member = guild.Members[context.User.Id];
+			var isBotOwner = context.Client.CurrentApplication.Owners.Contains(context.User);
+			if ((member != null && member.IsOwner) || isBotOwner) {
+				return Task.FromResult(true);
+			}
+
+			if (_context == null){
+				_context = (GuildSettingsContext)context.Services.GetService(typeof(GuildSettingsContext));
+			}
 			return Task.FromResult(
-				guild.Members[context.User.Id].Roles.Any(
-					y => this._config.AdminRoles.Contains(y.Id)
-			));
+				_context.IsAdminRole(guild.Id, member?.Roles)
+			);
 		}
 	}
 

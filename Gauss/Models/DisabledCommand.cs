@@ -5,11 +5,8 @@
 **/
 
 namespace Gauss.Models {
-	public class UserMessageSettings {
-		public ulong UserId { get; set; }
-
+	public class DisabledCommand {
 		public ulong GuildId { get; set; }
-
-		public bool BlockDMs { get; set; }
+		public string CommandName { get; set; }
 	}
 }

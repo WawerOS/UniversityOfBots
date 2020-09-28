@@ -8,12 +8,12 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus;
-using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using Gauss.Database;
 using Gauss.Models;
 using Gauss.Utilities;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Gauss.Modules {
 	public class VoiceChannelChangeEvent {
@@ -23,52 +23,18 @@ namespace Gauss.Modules {
 	}
 
 	public class VCModule {
-		public static VCNotificationContext configDB = new VCNotificationContext();
-		private GaussConfig _config;
+		private readonly GaussConfig _config;
+		private readonly UserSettingsContext _settings;
+		
 
-		public static VCNotificationConfig GetUserConfig(CommandContext context) {
-			try {
-				var existingConfig = from config in configDB.Configs
-									 where config.GuildId == context.GetGuild().Id && config.UserId == context.User.Id
-									 select config;
-				return existingConfig.SingleOrDefault();
-			} catch (Exception) {
-			}
-			return null;
-		}
-
-		public static DbSet<VCNotificationConfig> Configs {
-			get {
-				return configDB.Configs;
-			}
-		}
-
-		public static void AddUserConfig(VCNotificationConfig newConfig) {
-			var existingConfig = from config in configDB.Configs
-								 where config.GuildId == newConfig.GuildId && config.UserId == newConfig.UserId
-								 select config;
-			lock (configDB) {
-				if (existingConfig.Count() > 0) {
-					configDB.Configs.Update(newConfig);
-				} else {
-					configDB.Configs.Add(newConfig);
-				}
-			}
-		}
-
-		public static void SaveConfig() {
-			lock (configDB) {
-				configDB.SaveChanges();
-			}
-		}
-
-		public VCModule(DiscordClient client, GaussConfig config) {
+		public VCModule(DiscordClient client, GaussConfig config, ServiceProvider commandServices) {
 			this._config = config;
+			this._settings = commandServices.GetService<UserSettingsContext>();
 			client.VoiceStateUpdated += this.HandleVoiceStateEvent;
 		}
 
 		private async Task NotifyUsers(DiscordGuild guild, DiscordUser joinedUser, DiscordChannel channel) {
-			var configs = from config in configDB.Configs
+			var configs = from config in _settings.UserVoiceSettings
 						  where config.GuildId == guild.Id
 							  && config.IsInTimeout == false
 							  && config.IsActive == true
@@ -106,7 +72,7 @@ namespace Gauss.Modules {
 					throw new Exception($"Exception while trying to notify {config.UserId} about voice chat. {ex}");
 				}
 			}
-			SaveConfig();
+			_settings.SaveChanges();
 		}
 
 
@@ -160,10 +126,10 @@ namespace Gauss.Modules {
 								return;
 							}
 
-							foreach (var config in configDB.Configs.Where(x => x.GuildId == e.Guild.Id)) {
+							foreach (var config in _settings.UserVoiceSettings.Where(x => x.GuildId == e.Guild.Id)) {
 								config.IsInTimeout = false;
 							}
-							SaveConfig();
+							_settings.SaveChanges();
 						});
 					}
 				}

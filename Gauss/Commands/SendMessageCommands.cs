@@ -4,92 +4,25 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 **/
 
-using System;
-using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using Gauss.CommandAttributes;
+using Gauss.Database;
 using Gauss.Models;
 using Gauss.Utilities;
 
 namespace Gauss.Commands {
 	[Group("send")]
 	[NotBot]
+	[CheckDisabled]
 	public class SendMessageCommands : BaseCommandModule {
-		protected static readonly MessageDataContext _dbContext;
-		private readonly GaussConfig _config;
+		private readonly UserSettingsContext _dbContext;
 
-		static SendMessageCommands() {
-			_dbContext = new MessageDataContext();
+		public SendMessageCommands(UserSettingsContext dbContext) {
+			this._dbContext = dbContext;
 		}
-
-		public SendMessageCommands(GaussConfig config) {
-			this._config = config;
-		}
-
-
-		[RequireAdmin]
-		[Group("admin")]
-		public class MessageAdmin : BaseCommandModule {
-			private readonly GaussConfig _config;
-
-			public MessageAdmin(GaussConfig config) {
-				this._config = config;
-			}
-
-			[Command("restrict")]
-			[Aliases("ban")]
-			[Description("TODO")]
-			public async Task BanUser(CommandContext context, string user) {
-				var guild = context.GetGuild();
-				var userId = guild.FindMember(user).Id;
-				MessageRestrictedUser existingRestriction;
-				lock (_dbContext) {
-					existingRestriction = _dbContext.RestrictedUsers.FirstOrDefault(y => y.UserId == userId);
-				}
-				if (existingRestriction == null) {
-					lock (_dbContext) {
-						_dbContext.Add(new MessageRestrictedUser() {
-							UserId = userId,
-							RestrictionEnd = null,
-						});
-						_dbContext.SaveChanges();
-					}
-				}
-
-				await context.RespondAsync($"'{user}' is now indefinetly restricted from using the send command.");
-			}
-
-			[Command("unrestrict")]
-			[Aliases("unban")]
-			[Description("TODO")]
-			public async Task UnbanUser(CommandContext context, string user) {
-				var guild = context.GetGuild();
-				var userId = guild.FindMember(user).Id;
-				MessageRestrictedUser existingRestriction;
-				lock (_dbContext) {
-					existingRestriction = _dbContext.RestrictedUsers.FirstOrDefault(y => y.UserId == userId);
-					if (existingRestriction != null) {
-						_dbContext.RestrictedUsers.Remove(existingRestriction);
-						_dbContext.SaveChanges();
-					}
-				}
-				await context.RespondAsync($"'{user}' can now use send command again.");
-			}
-
-			[Command("dms")]
-			public async Task ToggleDMs(CommandContext context, bool enable) {
-				this._config.AnonymousDMs = enable;
-				this._config.Save();
-
-				await context.RespondAsync(
-					$"Sending anonymous DMs is now {(enable ? "enabled" : "disabled.")}"
-				);
-			}
-		}
-
 
 		[Description("Send a message anonymously through the bot to a channel")]
 		[GroupCommand]
@@ -101,14 +34,6 @@ namespace Gauss.Commands {
 			[Description("Your message")]
 			[RemainingText] string message
 		) {
-			bool notAllowed;
-			lock (_dbContext) {
-				notAllowed = _dbContext.RestrictedUsers.Any(y => y.UserId == context.User.Id);
-			}
-			if (notAllowed) {
-				await context.RespondAsync("You are not allowed to use this command.");
-				return;
-			}
 			if (string.IsNullOrWhiteSpace(message)) {
 				await context.RespondAsync("You must specify a message.");
 				return;
@@ -141,26 +66,13 @@ namespace Gauss.Commands {
 			if (context.User.IsBot) {
 				return;
 			}
-			if (this._config.AnonymousDMs == false) {
-				await context.RespondAsync("Sending DMs is currently disabled.");
-				return;
-			}
+
 			if (string.IsNullOrWhiteSpace(message)) {
 				await context.RespondAsync("You must specify a message.");
 				return;
 			}
 
-			bool notAllowed;
-			lock (_dbContext) {
-				notAllowed = _dbContext.RestrictedUsers.Any(y => y.UserId == context.User.Id);
-			}
-			if (notAllowed) {
-				await context.RespondAsync("You are not allowed to use this command.");
-				return;
-			}
-
 			var guild = context.GetGuild();
-			var sendingMember = guild.Members[context.User.Id];
 			var receivingMember = guild.FindMember(receiver);
 
 			if (receivingMember == null) {
@@ -173,12 +85,7 @@ namespace Gauss.Commands {
 				return;
 			}
 
-			MessageUserConfig receiverSettings;
-			lock (_dbContext) {
-				receiverSettings = (from settings in _dbContext.UserSettings
-									where settings.UserId == receivingMember.Id
-									select settings).SingleOrDefault();
-			}
+			UserMessageSettings receiverSettings = this._dbContext.GetMessageSettings(guild.Id, receivingMember.Id);
 			if (receiverSettings != null && receiverSettings.BlockDMs) {
 				await context.RespondAsync($"Can't send your message to {receiver}.");
 			} else {
@@ -196,28 +103,19 @@ namespace Gauss.Commands {
 			[Description("Block DMs (true) or allow them (false)")]
 			bool block = true
 		) {
-			MessageUserConfig userConfig;
-			lock (_dbContext) {
-				userConfig =
-					(from config in _dbContext.UserSettings
-					 where config.UserId == context.User.Id
-					 select config).FirstOrDefault();
-			}
+			var guild = context.GetGuild();
+
+			UserMessageSettings userConfig = _dbContext.GetMessageSettings(guild.Id, context.User.Id);
 			if (userConfig == null) {
-				userConfig = new MessageUserConfig() {
+				userConfig = new UserMessageSettings() {
+					GuildId = guild.Id,
 					UserId = context.User.Id,
 					BlockDMs = block
 				};
-				lock (_dbContext) {
-					_dbContext.UserSettings.Add(userConfig);
-					_dbContext.SaveChanges();
-				}
+				_dbContext.SetMessageSettings(userConfig);
 			} else {
 				userConfig.BlockDMs = block;
-				lock (_dbContext) {
-					_dbContext.UserSettings.Update(userConfig);
-					_dbContext.SaveChanges();
-				}
+				_dbContext.SetMessageSettings(userConfig);
 			}
 			if (userConfig.BlockDMs) {
 				await context.RespondAsync($"You will no longer receive DMs via the `send_dm` command.");

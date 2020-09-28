@@ -7,7 +7,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using DSharpPlus.Entities;
-using Microsoft.EntityFrameworkCore;
 
 namespace Gauss.Models {
 
@@ -23,7 +22,7 @@ namespace Gauss.Models {
 		public string Username { get; set; }
 	}
 
-	public class VCNotificationConfig {
+	public class UserVoiceSettings {
 
 		public ulong GuildId { get; set; }
 		public ulong UserId { get; set; }
@@ -34,21 +33,6 @@ namespace Gauss.Models {
 		public UserStatus TargetStatus { get; set; } = UserStatus.Idle;
 
 		public bool IsInTimeout { get; set; }
-	}
-
-	public class VCNotificationContext : DbContext {
-		public DbSet<VCNotificationConfig> Configs { get; set; }
-
-		protected override void OnConfiguring(DbContextOptionsBuilder options)
-			=> options.UseSqlite("Data Source=botdata.db");
-
-		protected override void OnModelCreating(ModelBuilder modelBuilder) {
-			modelBuilder.Entity<VCNotificationConfig>()
-				.HasKey(e => new { e.GuildId, e.UserId });
-		}
-		public VCNotificationContext() {
-			this.Database.EnsureCreated();
-		}
 	}
 
 }

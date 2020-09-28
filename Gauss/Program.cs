@@ -12,7 +12,7 @@ using static System.Environment;
 
 namespace Gauss {
 	public class Program {
-		private static GaussBot BotInstance;
+		private static GaussBot _botInstance;
 		public async static Task Main(string[] args) {
 			string configDirectory = Path.Join(GetFolderPath(SpecialFolder.UserProfile), "GaussBot");
 
@@ -21,14 +21,14 @@ namespace Gauss {
 			}
 			GaussConfig config = GaussConfig.GetInstance(configDirectory);
 
-			BotInstance = new GaussBot(config);
-			BotInstance.Connect();
+			_botInstance = new GaussBot(config);
+			_botInstance.Connect();
 			await Task.Delay(-1);
 		}
 
 
 		private static void HandleExit(object sender, EventArgs e) {
-			BotInstance.Disconnect();
+			_botInstance.Disconnect();
 		}
 	}
 }

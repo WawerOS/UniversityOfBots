@@ -10,18 +10,24 @@ using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using Gauss.Database;
 using Gauss.Models;
-using Gauss.Modules;
 using Gauss.Utilities;
 
 namespace Gauss.Commands {
 	[Group("voice")]
 	[Description("Group of commands to manage your voice chat notification settings.")]
 	public class VoiceCommands : BaseCommandModule {
+		private readonly UserSettingsContext _settings;
+
+		public VoiceCommands(UserSettingsContext settings) {
+			this._settings = settings;
+		}
+
 		[Command("settings")]
 		[GroupCommand]
 		public async Task GetSettings(CommandContext context) {
-			var config = VCModule.GetUserConfig(context);
+			var config = _settings.GetVoiceSettings(context.GetGuild().Id, context.User.Id);
 			if (config == null) {
 				await context.RespondAsync(
 					"Notifications are inactive and or not configured. Use `!vox notify` to enable them."
@@ -49,20 +55,19 @@ namespace Gauss.Commands {
 			};
 
 			var guild = context.GetGuild();
-			var config = VCModule.GetUserConfig(context);
+			var config = _settings.GetVoiceSettings(guild.Id, context.User.Id);
 			if (config == null) {
-				config = new VCNotificationConfig() {
+				config = new UserVoiceSettings() {
 					UserId = context.User.Id,
 					GuildId = guild.Id,
 					TargetStatus = statusEnum,
 					IsActive = true,
 				};
-				VCModule.AddUserConfig(config);
 			} else {
 				config.TargetStatus = statusEnum;
 				config.IsActive = true;
 			}
-			VCModule.SaveConfig();
+			this._settings.SetVoiceSettings(config);
 
 			await context.RespondAsync(
 				$"Notifications {(config.IsActive ? "active" : "inactive")}. " +
@@ -75,16 +80,22 @@ namespace Gauss.Commands {
 		[Group("filter")]
 		[Description("Commands to modify your filter settings for notifications.")]
 		public class VoxList : BaseCommandModule {
+			private readonly UserSettingsContext _settings;
+
+			public VoxList(UserSettingsContext settings) {
+				this._settings = settings;
+			}
+
 			public override Task BeforeExecutionAsync(CommandContext context) {
-				var config = VCModule.GetUserConfig(context);
+				var guild = context.GetGuild();
+				var config = this._settings.GetVoiceSettings(guild.Id, context.User.Id);
 				if (config == null) {
-					config = new VCNotificationConfig() {
+					config = new UserVoiceSettings() {
 						UserId = context.User.Id,
-						GuildId = context.GetGuild().Id,
+						GuildId = guild.Id,
 						IsActive = false,
 					};
-					VCModule.AddUserConfig(config);
-					VCModule.SaveConfig();
+					this._settings.SetVoiceSettings(config);
 				}
 				return Task.CompletedTask;
 			}
@@ -92,9 +103,9 @@ namespace Gauss.Commands {
 			[Command("whitelist")]
 			[Description("Only receive notifications currently on your filter list.")]
 			public async Task VoxSetWhitelist(CommandContext context) {
-				var config = VCModule.GetUserConfig(context);
+				var config = this._settings.GetVoiceSettings(context.GetGuild().Id, context.User.Id);
 				config.FilterMode = FilterMode.Whitelist;
-				VCModule.SaveConfig();
+				this._settings.SetVoiceSettings(config);
 
 				var dmChannel = await context.GetDMChannel();
 				await dmChannel.SendMessageAsync(
@@ -107,9 +118,9 @@ namespace Gauss.Commands {
 			[Command("blacklist")]
 			[Description("You won't receive notifications currently on your filter list.")]
 			public async Task VoxSetBlacklist(CommandContext context) {
-				var config = VCModule.GetUserConfig(context);
+				var config = this._settings.GetVoiceSettings(context.GetGuild().Id, context.User.Id);
 				config.FilterMode = FilterMode.Blacklist;
-				VCModule.SaveConfig();
+				this._settings.SetVoiceSettings(config);
 
 				var dmChannel = await context.GetDMChannel();
 				await dmChannel.SendMessageAsync(
@@ -120,9 +131,9 @@ namespace Gauss.Commands {
 			[Command("disable")]
 			[Description("Disable filtering, but keeps the list intact for later reactivation")]
 			public async Task VoxDisableFilter(CommandContext context) {
-				var config = VCModule.GetUserConfig(context);
+				var config = this._settings.GetVoiceSettings(context.GetGuild().Id, context.User.Id);
 				config.FilterMode = FilterMode.Disabled;
-				VCModule.SaveConfig();
+				this._settings.SetVoiceSettings(config);
 
 				var dmChannel = await context.GetDMChannel();
 				await dmChannel.SendMessageAsync($"I will ignore your filter list from now on, but I'll remember it for later.");
@@ -136,16 +147,16 @@ namespace Gauss.Commands {
 				[Description("The users you want to remove from the list. No @Mentions!")]
 				params string[] users
 			) {
-				var config = VCModule.GetUserConfig(context);
 				var guild = context.GetGuild();
 				var member = guild.Members[context.User.Id];
+				var config = _settings.GetVoiceSettings(guild.Id, context.User.Id);
 				foreach (var username in users) {
 					var user = guild.Members.Values.FirstOrDefault(member => member.Username.ToLower() == username.ToLower());
 					if (user != null) {
 						config.TargetUsers.RemoveAll(y => y.UserId == user.Id);
 					}
 				}
-				VCModule.SaveConfig();
+				this._settings.SetVoiceSettings(config);
 
 				var dmChannel = await member.CreateDmChannelAsync();
 				if (config.TargetUsers.Count() > 0) {
@@ -164,9 +175,9 @@ namespace Gauss.Commands {
 				[Description("The users you want to be notified about, as plain text. No @Mentions!")]
 				params string[] users
 			) {
-				var config = VCModule.GetUserConfig(context);
 				var guild = context.GetGuild();
 				var member = guild.Members[context.User.Id];
+				var config = _settings.GetVoiceSettings(guild.Id, context.User.Id);
 				foreach (var username in users) {
 					var user = guild.Members.Values.FirstOrDefault(member => member.Username.ToLower() == username.ToLower());
 					if (user != null && !config.TargetUsers.Any(y => y.UserId == user.Id)) {
@@ -176,7 +187,7 @@ namespace Gauss.Commands {
 						});
 					}
 				}
-				VCModule.SaveConfig();
+				this._settings.SetVoiceSettings(config);
 
 				string userList = string.Join(", ", config.TargetUsers.Select(y => y.Username));
 				var dmChannel = await member.CreateDmChannelAsync();
@@ -190,14 +201,14 @@ namespace Gauss.Commands {
 		[Aliases("disable")]
 		[Description("Deactivate voice chat notifications entirely. This will keep your settings intact for later reactivation")]
 		public async Task RemoveVoxNotification(CommandContext context) {
-			var config = VCModule.GetUserConfig(context);
+			var config = _settings.GetVoiceSettings(context.GetGuild().Id, context.User.Id);
 			var dmChannel = await context.GetDMChannel();
 			if (config == null) {
 				await dmChannel.SendMessageAsync("You don't have voice chat notiifcations active.");
 				return;
 			}
 			config.IsActive = false;
-			VCModule.SaveConfig();
+			this._settings.SetVoiceSettings(config);
 
 			await context.RespondAsync($"I cleared your notification settings. I will no longer bother you about voice chats.");
 		}

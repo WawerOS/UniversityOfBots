@@ -11,7 +11,9 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using DSharpPlus.Interactivity;
 using Gauss.Commands;
+using Gauss.Database;
 using Gauss.Models;
 using Gauss.Modules;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,7 +31,9 @@ namespace Gauss {
 			this._client = new DiscordClient(new DiscordConfiguration {
 				Token = config.DiscordToken,
 			});
-			var commandDependencies = new ServiceCollection()
+			var commandServices = new ServiceCollection()
+				.AddDbContext<UserSettingsContext>(ServiceLifetime.Singleton)
+				.AddDbContext<GuildSettingsContext>(ServiceLifetime.Singleton)
 				.AddSingleton(this._config)
 				.BuildServiceProvider();
 
@@ -42,18 +46,20 @@ namespace Gauss {
 					}
 					return Task.FromResult(-1);
 				},
-				Services = commandDependencies,
+				Services = commandServices,
 				EnableMentionPrefix = true,
 			};
 
+
 			this._client.UseCommandsNext(commandConfig);
+			this._client.UseInteractivity(new InteractivityConfiguration { });
 			this._commands = this._client.GetCommandsNext();
 			this._commands.RegisterCommands<SendMessageCommands>();
-
+			this._commands.RegisterCommands<AdminCommands>();
 			// this._commands.RegisterCommands<VoiceCommands>();
 			// this._modules.Add(new RoleAssign(this._client, _config));
-			this._modules.Add(new VCModule(this._client, this._config));
 			this._modules.Add(new RedditLinker(this._client, this._config));
+			this._modules.Add(new VCModule(this._client, this._config, commandServices));
 			this._commands.CommandErrored += this.Commands_CommandErrored;
 
 			this._client.Ready += this.OnClientReady;
