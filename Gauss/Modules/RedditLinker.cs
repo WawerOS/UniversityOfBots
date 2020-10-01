@@ -36,7 +36,7 @@ namespace Gauss.Modules {
 				var redditMatches = redditRegex.Matches(e.Message.Content);
 				List<string> validSubs = new List<string>();
 				List<string> nsfwSubs = new List<string>();
-
+				bool addShrug = false;
 				foreach (Match match in redditMatches) {
 					if (match.Groups.Count >= 3) {
 						string subreddit = match.Groups[2].Value.Trim();
@@ -54,7 +54,7 @@ namespace Gauss.Modules {
 								nsfwSubs.Add(subreddit);
 							}
 						} catch (Exception) {
-							// TODO
+							addShrug = true;
 						}
 					}
 				}
@@ -70,7 +70,7 @@ namespace Gauss.Modules {
 						? $"Warning: {nsfwSubs[0]} is NSFW!"
 						: $"Warning! These subs are NSFW:" + string.Join(", ", validSubs);
 				}
-				if (nsfwSubs.Count == 0 && validSubs.Count == 0) {
+				if (addShrug && nsfwSubs.Count == 0 && validSubs.Count == 0) {
 					await e.Message.CreateReactionAsync(DiscordEmoji.FromName(e.Client, ":person_shrugging:"));
 				} else {
 					await e.Message.RespondAsync(answer);
