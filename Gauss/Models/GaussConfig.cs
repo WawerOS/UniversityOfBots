@@ -36,6 +36,8 @@ namespace Gauss.Models {
 		[JsonProperty("status_text")]
 		public string StatusText { get; set; }
 
+		public List<ulong> RedditEnabledChannels { get; set; }
+
 		public GaussConfig() {
 
 		}
