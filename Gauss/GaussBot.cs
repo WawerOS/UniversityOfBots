@@ -56,6 +56,7 @@ namespace Gauss {
 			this._commands = this._client.GetCommandsNext();
 			this._commands.RegisterCommands<SendMessageCommands>();
 			this._commands.RegisterCommands<AdminCommands>();
+			this._commands.RegisterCommands<MiscCommands>();
 			// this._commands.RegisterCommands<VoiceCommands>();
 			// this._modules.Add(new RoleAssign(this._client, _config));
 			this._modules.Add(new RedditLinker(this._client, this._config));
