@@ -2,17 +2,31 @@
 
 Up to date explanations of all record keeping as it related to personal information is [explained here](./PRIVACY.md).
 
-# Commands
+# Basic usage
 
-## send
+You can use Gauss by sending a message starting with `!g `, followed by a command name:
+
+`!g help`
+
+If you DM the bot, you can omit the prefix to use the command:
+
+`help`
+
+# Available commands
+
+Click on the headlines to get to detailed documentation of all available commands in the category.
+
+## [send](./send/README.md)
 
 You can send anonymous messages through Gauss with the `send` command.
-[Click here for detailed usage information.](./send/README.md)
 
-## admin
+## [admin](./admin/README.md)
 
 You can access moderation options through various `admin` commands.
-[Click here for detailed usage information.](./admin/README.md)
+
+## [Miscellaneous commands](./misc/README.md)
+
+Other commands that don't fit neatly into their own grouping.
 
 ---
 

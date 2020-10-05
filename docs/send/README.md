@@ -32,6 +32,8 @@ For example: `!g send shouting I AM ANGRY` will send the message to `shouting-on
 `!g send channel the-lobby Hello!`
 `!g send the-lobby Hello!`
 
+---
+
 ### send dm
 
 **Description**: Anonymously sends a message to a user via DM.
@@ -51,6 +53,8 @@ For example: `!g send shouting I AM ANGRY` will send the message to `shouting-on
 
 **Examples**:
 `!g send dm MaxMustermann Hello!`
+
+---
 
 ### send disableDMs
 
