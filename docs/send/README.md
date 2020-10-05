@@ -2,6 +2,14 @@
 
 ---
 
+## Send message commands:
+
+- [send channel](#send-channel)
+- [send dm](#send-dm)
+- [send disableDMs](#send-disableDMs)
+
+---
+
 ### send channel
 
 **Description**: Anonymously sends a message to a specified channel

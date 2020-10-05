@@ -27,9 +27,6 @@ namespace Gauss.Models {
 		[JsonProperty("voice_notification_categories")]
 		public List<ulong> VoiceNotificationCategories { get; set; }
 
-		[JsonProperty("admin_roles")]
-		public List<ulong> AdminRoles { get; set; }
-
 		[JsonProperty("status_text")]
 		public string StatusText { get; set; }
 

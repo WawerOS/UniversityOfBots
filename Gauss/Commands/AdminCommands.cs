@@ -33,7 +33,7 @@ namespace Gauss.Commands {
 		public async Task AddAdminRole(CommandContext context, ulong roleId) {
 			var guild = context.GetGuild();
 			var role = guild.Roles[roleId];
-			if (role == null){
+			if (role == null) {
 				await context.RespondAsync("Could not find role with that ID.");
 				return;
 			}
@@ -52,7 +52,7 @@ namespace Gauss.Commands {
 			var guild = context.GetGuild();
 			var role = guild.Roles[roleId];
 
-			if (!_context.IsAdminRole(guild.Id, roleId)){
+			if (!_context.IsAdminRole(guild.Id, roleId)) {
 				await context.RespondAsync("The role with this ID does not have priviliges.");
 				return;
 			}
@@ -182,16 +182,16 @@ namespace Gauss.Commands {
 
 				await context.CreateConfirmation(
 					botMessage,
-					async () => { 
+					async () => {
 						this._context.SetRestrictionForUser(
-							guild.Id, 
+							guild.Id,
 							user.Id,
-							new CommandRestriction {CommandName = command.QualifiedName }
+							new CommandRestriction { CommandName = command.QualifiedName }
 						);
 						await context.RespondAsync($"Disabled `{command.QualifiedName}` for {user.Username}?.");
 					},
-					async () => { 
-						await context.RespondAsync("Action aborted. No settings changed."); 
+					async () => {
+						await context.RespondAsync("Action aborted. No settings changed.");
 					}
 				);
 			}
@@ -214,19 +214,19 @@ namespace Gauss.Commands {
 					return;
 				}
 				string botMessage = $"Re-enable command `{restriction.CommandName}` for {user.Username}?";
-				
+
 				await context.CreateConfirmation(
 					botMessage,
-					async () => { 
+					async () => {
 						this._context.RemoveRestrictionForUser(
-							guild.Id, 
+							guild.Id,
 							user.Id,
 							restriction
 						);
 						await context.RespondAsync($"Re-enabled `{restriction.CommandName}` for {user.Username}?.");
 					},
-					async () => { 
-						await context.RespondAsync("Action aborted. No settings changed."); 
+					async () => {
+						await context.RespondAsync("Action aborted. No settings changed.");
 					}
 				);
 			}
