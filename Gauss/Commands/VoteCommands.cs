@@ -4,12 +4,14 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 **/
 
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using Gauss.Utilities;
 using DSharpPlus.Entities;
+using Gauss.Models.Voting;
 
 namespace Gauss.Commands {
 	[Group("vote")]
@@ -29,6 +31,14 @@ namespace Gauss.Commands {
 				- "run these sets of methods every second" or something.
 
 		*/
+		[Command("help")]
+		public async Task GetHelp(CommandContext context) {
+			await context.RespondAsync(
+				"To vote, you have to use the `vote for` command. " +
+				"You can either do that in a public channel (be mindful of bot-spam) or by DMing this bot."
+			);
+		}
+
 
 		[Command("post")]
 		public async Task PostVote(CommandContext context, string description, params string[] options) {
@@ -39,24 +49,34 @@ namespace Gauss.Commands {
 					If yes: For how long? 10 minutes
 					Either way: Should other people (custodians) have that power?
 			*/
+			var poll = new Poll() {
+				Id = 1,
+				Description = description,
+				EndDate = System.DateTime.UtcNow + System.TimeSpan.FromDays(7),
+				Options = options.Select(
+					(y, i) => new PollOption() { Id = i + 1, Name = y }
+				).ToList()
+			};
+
 
 			var optionsText = string.Join(
 				"\n",
-				options.Select((x, i) => $"`{i + 1} - {x}`")
+				options.Select((x, i) => $"`{i + 1}` - {x}")
 			);
 			ulong voteId = 1;
 
 			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
-				Title = description,
-				Description = optionsText,
+				Title = $"Poll #{voteId}:",
+				Description = description + "\n\n" + optionsText + $"\n\nTo vote, send `!g vote for {voteId} <optionNumber>`",
 				Color = DiscordColor.Blurple,
-				Footer = new DiscordEmbedBuilder.EmbedFooter() { Text = $"To vote, send `!g vote for {voteId} <optionNumber>`" }
+				Footer = new DiscordEmbedBuilder.EmbedFooter() { Text = "More information via '!g vote help'" }
 			};
-
+			embedBuilder.Timestamp = System.DateTime.UtcNow;
 			await context.RespondAsync(embed: embedBuilder.Build());
 		}
 
 		[Command("for")]
+		[GroupCommand]
 		public async Task VoteFor(CommandContext context, ulong voteId, ulong optionNumber, uint votes = 1) {
 			uint voteCost = votes == 1
 				? 0
