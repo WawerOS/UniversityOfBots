@@ -13,6 +13,5 @@ namespace Gauss.Models.Voting {
 		public string Name { get; set; }
 		public int Id { get; set; }
 		public uint Votes { get; set; }
-
 	}
 }

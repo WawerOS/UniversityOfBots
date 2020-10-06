@@ -10,11 +10,49 @@ using System;
 namespace Gauss.Models.Voting {
 
 	public class Poll {
+		/// <summary>
+		/// Running ID of the poll.
+		/// </summary>
 		public ulong Id { get; set; }
+
+		/// <summary>
+		/// Unique ID of the guild the poll is proposed for.
+		/// </summary>
 		public ulong GuldId { get; set; }
+
+		/// <summary>
+		/// State of the poll. Defaults to <see cref="PollState.Proposal"/>.
+		/// </summary>
+		public PollState State { get; set; } = PollState.Proposal;
+
+		/// <summary>
+		/// Date and time of when the polling will close.
+		/// </summary>
 		public DateTime EndDate { get; set; }
+
+		/// <summary>
+		/// Description of what will be decided by the poll.
+		/// </summary>
 		public string Description { get; set; }
+
+		/// <summary>
+		/// List of available options users can vote for.
+		/// </summary>
 		public List<PollOption> Options { get; set; }
+
+		/// <summary>
+		/// The list of users IDs who participated in the poll.
+		/// </summary>
 		public List<ulong> ParticipantIds { get; set; }
+
+		/// <summary>
+		/// The ID of the user who proposed the poll.
+		/// </summary>
+		public ulong ProposingUser { get; set; }
+
+		/// <summary>
+		/// ID of the discord message the poll has been posted in.
+		/// </summary>
+		public ulong MessageId{ get; set;}
 	}
 }

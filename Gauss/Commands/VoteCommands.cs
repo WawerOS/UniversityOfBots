@@ -12,11 +12,12 @@ using DSharpPlus.CommandsNext.Attributes;
 using Gauss.Utilities;
 using DSharpPlus.Entities;
 using Gauss.Models.Voting;
+using Gauss.CommandAttributes;
 
 namespace Gauss.Commands {
 	[Group("vote")]
-
 	[Description("voting commands")]
+	[CheckDisabled]
 	public class VoteCommands : BaseCommandModule {
 
 		/* Stuff to implement / design:
@@ -39,8 +40,26 @@ namespace Gauss.Commands {
 			);
 		}
 
+		[Command("list")]
+		[Description("List polls proposed for the next voting cycle.")]
+		public async Task ListPolls(CommandContext context, PollState status = PollState.Proposal) {
+			await context.RespondAsync("This command is not yet implemented.");
+		}
 
-		[Command("post")]
+		[Command("link")]
+		[Description("Post the link to a given poll.")]
+		public async Task ListPolls(CommandContext context, uint pollId) {
+			await context.RespondAsync("This command is not yet implemented.");
+		}
+
+		[Command("retract")]
+		[Description("Retract a proposed poll.")]
+		public async Task RetractPoll(CommandContext context, uint pollId) {
+			await context.RespondAsync("This command is not yet implemented.");
+		}
+
+		[Command("propose")]
+		[Description("Propose a new poll to vote for in the next cycle.")]
 		public async Task PostVote(CommandContext context, string description, params string[] options) {
 			/*
 				TODO: Make this specifically always post in the dedicated vote channel.
@@ -51,6 +70,7 @@ namespace Gauss.Commands {
 			*/
 			var poll = new Poll() {
 				Id = 1,
+				GuldId = context.GetGuild().Id,
 				Description = description,
 				EndDate = System.DateTime.UtcNow + System.TimeSpan.FromDays(7),
 				Options = options.Select(
@@ -76,6 +96,7 @@ namespace Gauss.Commands {
 		}
 
 		[Command("for")]
+		[Description("Give your vote for a poll.")]
 		[GroupCommand]
 		public async Task VoteFor(CommandContext context, ulong voteId, ulong optionNumber, uint votes = 1) {
 			uint voteCost = votes == 1
