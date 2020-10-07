@@ -14,7 +14,15 @@ namespace Gauss.Modules {
 
 		public WelcomeModule(DiscordClient client, GaussConfig config) {
 			client.MessageCreated += this.HandleNewMessage;
+			client.MessageDeleted += this.HandleMessageDeletion;
 			this._config = config;
+		}
+
+		private Task HandleMessageDeletion(MessageDeleteEventArgs e) {
+			if (e.Message == this._lastMessage) {
+				this._lastMessage = null;
+			}
+			return Task.CompletedTask;
 		}
 
 		public Task HandleNewMessage(MessageCreateEventArgs e) {
@@ -22,7 +30,7 @@ namespace Gauss.Modules {
 				if (e.Channel.IsPrivate) {
 					return;
 				}
-				
+
 				_config.WelcomeChannel.TryGetValue(e.Guild.Id, out ulong welcomeChannel);
 				_config.WelcomeMessage.TryGetValue(e.Guild.Id, out string welcomeMessage);
 				if (welcomeChannel == 0 || welcomeMessage == null) {
@@ -34,8 +42,6 @@ namespace Gauss.Modules {
 
 				if (_triggerExpression.IsMatch(e.Message.Content)) {
 					if (this._lastMessage != null) {
-						Console.WriteLine(this._lastMessage.CreationTimestamp);
-						Console.WriteLine(DateTime.UtcNow.AddHours(-1));
 						await this._lastMessage.ModifyAsync("[This previously contained the welcome message]");
 					}
 					this._lastMessage = await e.Channel.SendMessageAsync(welcomeMessage);

@@ -72,7 +72,7 @@ namespace Gauss.Modules {
 				}
 				if (addShrug && nsfwSubs.Count == 0 && validSubs.Count == 0) {
 					await e.Message.CreateReactionAsync(DiscordEmoji.FromName(e.Client, ":person_shrugging:"));
-				} else {
+				} else if (!string.IsNullOrEmpty(answer)) {
 					await e.Message.RespondAsync(answer);
 				}
 			});
