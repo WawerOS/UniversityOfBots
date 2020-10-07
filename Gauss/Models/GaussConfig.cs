@@ -30,6 +30,11 @@ namespace Gauss.Models {
 		[JsonProperty("status_text")]
 		public string StatusText { get; set; }
 
+		[JsonProperty("welcome_message")]
+		public Dictionary<ulong, string> WelcomeMessage {get; set;} = new Dictionary<ulong, string>();
+		[JsonProperty("welcome_channel")]
+		public Dictionary<ulong, ulong> WelcomeChannel {get; set;} = new Dictionary<ulong, ulong>();
+
 		public List<ulong> RedditEnabledChannels { get; set; }
 
 		public GaussConfig() {

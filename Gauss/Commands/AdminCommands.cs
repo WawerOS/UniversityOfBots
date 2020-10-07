@@ -66,6 +66,40 @@ namespace Gauss.Commands {
 			);
 		}
 
+
+		[Group("welcome")]
+		public class WelcomeAdminCommands : BaseCommandModule {
+			private readonly GaussConfig _config;
+
+			public WelcomeAdminCommands(GaussConfig config) {
+				this._config = config;
+			}
+
+			[Command("message")]
+			public async Task SetWelcomeMessage(CommandContext context, [RemainingText] string message) {
+				ulong guildId = context.GetGuild().Id;
+				if (!this._config.WelcomeMessage.ContainsKey(guildId) ){
+					this._config.WelcomeMessage.Add(guildId, message);
+				} else {
+					this._config.WelcomeMessage[guildId] = message;
+				}
+				await context.RespondAsync("New message saved.");
+				this._config.Save();
+			}
+
+			[Command("channel")]
+			public async Task SetWelcomeMessageChannel(CommandContext context, ulong channelId) {
+				var guild = context.GetGuild();
+				if (!this._config.WelcomeChannel.ContainsKey(guild.Id) ){
+					this._config.WelcomeChannel.Add(guild.Id, channelId);
+				} else {
+					this._config.WelcomeChannel[guild.Id] = channelId;
+				}
+				this._config.Save();
+				await context.RespondAsync($"Target channel (<#{channelId}>) saved.");
+			}
+		}
+
 		[Group("command")]
 		public class CommandAdminCommands : BaseCommandModule {
 			private readonly GuildSettingsContext _context;

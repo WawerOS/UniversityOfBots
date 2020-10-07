@@ -59,6 +59,7 @@ namespace Gauss {
 			this._commands.RegisterCommands<MiscCommands>();
 			// this._commands.RegisterCommands<VoiceCommands>();
 			// this._modules.Add(new RoleAssign(this._client, _config));
+			this._modules.Add(new WelcomeModule(this._client, this._config));
 			this._modules.Add(new RedditLinker(this._client, this._config));
 			this._modules.Add(new VCModule(this._client, this._config, commandServices));
 			this._commands.CommandErrored += this.Commands_CommandErrored;
