@@ -19,12 +19,14 @@ using Gauss.Commands;
 using Gauss.Database;
 using Gauss.Models;
 using Gauss.Modules;
+using Gauss.Scheduling;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Gauss {
 	public class GaussBot {
 		private readonly DiscordClient _client;
+		private readonly Scheduler _scheduler;
 		private readonly GaussConfig _config;
 		private readonly List<object> _modules = new List<object>();
 		private readonly CommandsNextExtension _commands;
@@ -34,10 +36,14 @@ namespace Gauss {
 			this._client = new DiscordClient(new DiscordConfiguration {
 				Token = config.DiscordToken,
 			});
+
+			this._scheduler = new Scheduler();
+			
 			var commandServices = new ServiceCollection()
 				.AddDbContext<UserSettingsContext>(ServiceLifetime.Singleton)
 				.AddDbContext<GuildSettingsContext>(ServiceLifetime.Singleton)
 				.AddSingleton(this._config)
+				.AddSingleton(this._scheduler)
 				.BuildServiceProvider();
 
 			var commandConfig = new CommandsNextConfiguration {

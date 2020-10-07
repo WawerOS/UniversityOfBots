@@ -22,10 +22,11 @@ namespace Gauss.Modules {
 
 		public Task HandleNewMessage(MessageCreateEventArgs e) {
 			return Task.Run(async () => {
-				if (string.IsNullOrEmpty(e.Message.Content)) {
+				if (string.IsNullOrEmpty(e.Message?.Content) || _config?.RedditEnabledChannels == null) {
 					return;
 				}
-				bool channelWhitelisted = _config.RedditEnabledChannels?.Contains(e.Channel.Id) == true;
+
+				bool channelWhitelisted = _config?.RedditEnabledChannels?.Contains(e.Channel.Id) == true;
 				if (!channelWhitelisted) {
 					if (e.Channel.ParentId.HasValue) {
 						channelWhitelisted = _config.RedditEnabledChannels?.Contains(e.Channel.ParentId.Value) == true;
