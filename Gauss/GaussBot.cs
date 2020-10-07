@@ -42,6 +42,7 @@ namespace Gauss {
 			var commandServices = new ServiceCollection()
 				.AddDbContext<UserSettingsContext>(ServiceLifetime.Singleton)
 				.AddDbContext<GuildSettingsContext>(ServiceLifetime.Singleton)
+				.AddDbContext<PollRepository>(ServiceLifetime.Singleton)
 				.AddSingleton(this._config)
 				.AddSingleton(this._scheduler)
 				.BuildServiceProvider();

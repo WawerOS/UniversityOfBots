@@ -7,7 +7,7 @@
 
 namespace Gauss.Models.Voting {
 
-	public class TokenPool {
+	public class UserTokenPool {
 		public ulong UserId { get; set; }
 		public ulong GuildId { get; set; }
 		public int Total { get; set; }

@@ -4,16 +4,17 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 **/
 
-using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace Gauss.Models.Voting {
     /// <summary>
     /// Settings governing the voting system for each Guild.
     /// </summary>
-    class VotingSettings {
+    public class VotingSettings {
         /// <summary>
 		/// Unique ID of the guild these settings belong to.
 		/// </summary>
+        [Key]      
         public ulong GuildId {get;set;}
 
         /// <summary>

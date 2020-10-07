@@ -6,19 +6,29 @@
 
 using System.Collections.Generic;
 using System;
+using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 
 namespace Gauss.Models.Voting {
+
+	[Owned]
+	public class PollParticipant {
+		public ulong UserId {get;set;}
+	}
 
 	public class Poll {
 		/// <summary>
 		/// Running ID of the poll.
 		/// </summary>
-		public ulong Id { get; set; }
+		[Key]
+		// [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+		public int Id { get; set; }
 
 		/// <summary>
 		/// Unique ID of the guild the poll is proposed for.
 		/// </summary>
-		public ulong GuldId { get; set; }
+		public ulong GuildId { get; set; }
 
 		/// <summary>
 		/// State of the poll. Defaults to <see cref="PollState.Proposal"/>.
@@ -29,6 +39,8 @@ namespace Gauss.Models.Voting {
 		/// Date and time of when the polling will close.
 		/// </summary>
 		public DateTime EndDate { get; set; }
+
+		public DateTime ProposedAt {get;set;}
 
 		/// <summary>
 		/// Description of what will be decided by the poll.
@@ -43,7 +55,7 @@ namespace Gauss.Models.Voting {
 		/// <summary>
 		/// The list of users IDs who participated in the poll.
 		/// </summary>
-		public List<ulong> ParticipantIds { get; set; }
+		public List<PollParticipant> ParticipantIds { get; set; }
 
 		/// <summary>
 		/// The ID of the user who proposed the poll.

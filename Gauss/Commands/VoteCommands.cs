@@ -13,12 +13,40 @@ using Gauss.Utilities;
 using DSharpPlus.Entities;
 using Gauss.Models.Voting;
 using Gauss.CommandAttributes;
+using Gauss.Database;
+using System.Threading;
+using System;
 
 namespace Gauss.Commands {
 	[Group("vote")]
 	[Description("voting commands")]
 	[CheckDisabled]
 	public class VoteCommands : BaseCommandModule {
+		private PollRepository _pollRepository;
+
+		public VoteCommands(PollRepository pollRepository) {
+			_pollRepository = pollRepository;
+		}
+
+
+		private DiscordEmbed GetEmbedForPoll(CommandContext context, Poll poll) {
+			var optionsText = string.Join(
+				"\n",
+				poll.Options.Select((y) => $"`{y.Id}` - {y.Name}")
+			);
+			var proposer = context.Client.Guilds[poll.GuildId].Members[poll.ProposingUser];
+
+			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
+				Title = $"Poll #{(poll.Id == 0 ? "pending" : poll.Id.ToString())}:",
+				Description = poll.Description + "\n\n" + optionsText + $"\n\nTo vote, send `!g vote for {poll.Id} <optionNumber>`",
+				Color = DiscordColor.Blurple,
+				Footer = new DiscordEmbedBuilder.EmbedFooter() { Text = $"Proposed by {proposer.Username} at " },
+				Timestamp = poll.ProposedAt,
+			};
+
+			return embedBuilder.Build();
+		}
+
 
 		/* Stuff to implement / design:
 			- Database for the polls
@@ -43,7 +71,12 @@ namespace Gauss.Commands {
 		[Command("list")]
 		[Description("List polls proposed for the next voting cycle.")]
 		public async Task ListPolls(CommandContext context, PollState status = PollState.Proposal) {
-			await context.RespondAsync("This command is not yet implemented.");
+			var polls = this._pollRepository.ListPolls(context.GetGuild().Id);
+
+			foreach (var poll in polls) {
+				await context.RespondAsync(embed: this.GetEmbedForPoll(context, poll));
+				Thread.Sleep(200);
+			}
 		}
 
 		[Command("link")]
@@ -69,30 +102,26 @@ namespace Gauss.Commands {
 					Either way: Should other people (custodians) have that power?
 			*/
 			var poll = new Poll() {
-				Id = 1,
-				GuldId = context.GetGuild().Id,
+				ProposingUser = context.User.Id,
+				GuildId = context.GetGuild().Id,
 				Description = description,
-				EndDate = System.DateTime.UtcNow + System.TimeSpan.FromDays(7),
+				EndDate = DateTime.UtcNow + TimeSpan.FromDays(7),
 				Options = options.Select(
 					(y, i) => new PollOption() { Id = i + 1, Name = y }
-				).ToList()
+				).ToList(),
+				ProposedAt = DateTime.UtcNow,
 			};
 
-
-			var optionsText = string.Join(
-				"\n",
-				options.Select((x, i) => $"`{i + 1}` - {x}")
+			DiscordEmbed embed = GetEmbedForPoll(context, poll);
+			// embedBuilder.Timestamp = System.DateTime.UtcNow;
+			await context.RespondAsync("Preview of the poll: ", embed: embed);
+			await context.CreateConfirmation(
+				"Propose the new poll?",
+				() => {
+					var id = _pollRepository.ProposePoll(poll);
+					context.RespondAsync($"Poll added with ID `{id}`");
+				}
 			);
-			ulong voteId = 1;
-
-			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
-				Title = $"Poll #{voteId}:",
-				Description = description + "\n\n" + optionsText + $"\n\nTo vote, send `!g vote for {voteId} <optionNumber>`",
-				Color = DiscordColor.Blurple,
-				Footer = new DiscordEmbedBuilder.EmbedFooter() { Text = "More information via '!g vote help'" }
-			};
-			embedBuilder.Timestamp = System.DateTime.UtcNow;
-			await context.RespondAsync(embed: embedBuilder.Build());
 		}
 
 		[Command("for")]
