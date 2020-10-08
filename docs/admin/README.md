@@ -12,6 +12,8 @@
 - [admin command enable](#admin-command-enable)
 - [admin command disableFor](#admin-command-disableFor)
 - [admin command enableFor](#admin-command-enableFor)
+- [admin welcome message](#admin-welcome-message)
+- [admin welcome channel](#admin-welcome-channel)
 
 ---
 
@@ -44,9 +46,7 @@ Note 1: You can get the ID by activating Discords developer mode and right-click
 
 **Aliases**: _none_
 
-**Examples**: `!g admin addrole 713490193407279155`
-
----
+## **Examples**: `!g admin addrole 713490193407279155`
 
 ### admin removerole
 
@@ -65,9 +65,7 @@ Note 1: You can get the ID by activating Discords developer mode and right-click
 
 **Aliases**: _none_
 
-**Examples**: `!g admin addrole 713490193407279155`
-
----
+## **Examples**: `!g admin addrole 713490193407279155`
 
 ### admin command listdisabled
 
@@ -77,9 +75,7 @@ Note 1: You can get the ID by activating Discords developer mode and right-click
 
 **Aliases**: _none_
 
-**Examples**: `!g admin listdisabled`
-
----
+## **Examples**: `!g admin listdisabled`
 
 ### admin command disable
 
@@ -95,7 +91,7 @@ Note 1: You can get the ID by activating Discords developer mode and right-click
 
 **Examples**:
 
-- `!g admin disable send` - Disable the entire `send` command group. Think: Every command that starts with `send `.
+- `!g admin disable send` - Disable the entire `send` command group. Think: Every command that starts with `send` .
 - `!g admin disable send dm` - Disable the `send dm` command specifically.
 
 ---
@@ -114,7 +110,7 @@ Note 1: You can get the ID by activating Discords developer mode and right-click
 
 **Examples**:
 
-- `!g admin disable send` - Reenable the entire `send` command group. Think: Every command that starts with `send `.
+- `!g admin disable send` - Reenable the entire `send` command group. Think: Every command that starts with `send` .
 - `!g admin disable send dm` - Reenable the `send dm` command specifically.
 
 ---
@@ -148,5 +144,41 @@ Note 1: You can get the ID by activating Discords developer mode and right-click
 **Aliases**:
 
 **Examples**:
+
+---
+
+### admin welcome message
+
+**Description**: Set the text for the welcome message.
+
+**Parameters**:
+
+| name    | format | default | description                   |
+| ------- | ------ | ------- | ----------------------------- |
+| message | text   | -       | Text for the welcome message. |
+
+**Aliases**: _none_
+
+**Examples**:
+* `!g admin message Hello!` - Sets the text to "hello!".
+
+---
+
+### admin welcome channel
+
+**Description**: Sets the channel where the welcome message will be posted.
+
+**Parameters**:
+
+| name      | format | default | description                |
+| --------- | ------ | ------- | -------------------------- |
+| channelId | number | -       | Discord ID of the channel. |
+
+Note: You can determine the channel ID by using the discord developer mode.
+
+**Aliases**: _none_
+
+**Examples**:
+* `!g admin welcome channel 713489039000338483` - enable the message for "the-lounge"
 
 ---
