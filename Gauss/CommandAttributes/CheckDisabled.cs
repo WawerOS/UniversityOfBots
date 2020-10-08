@@ -8,7 +8,6 @@ using System;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.Entities;
 using Gauss.Database;
 using Gauss.Utilities;
 
@@ -34,12 +33,7 @@ namespace Gauss.CommandAttributes {
 					result = userRestrictions.FindCommandRestriction(context.Command.QualifiedName) == null;
 				}
 			}
-
-			if (!result && !help) {
-				context.Message.CreateReactionAsync(DiscordEmoji.FromUnicode("🚫"));
-				return Task.FromResult(result);
-			}
-			return Task.FromResult(true);
+			return Task.FromResult(result || help);
 		}
 	}
 }

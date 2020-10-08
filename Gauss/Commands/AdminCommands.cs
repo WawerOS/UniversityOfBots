@@ -16,6 +16,7 @@ using Gauss.Models;
 namespace Gauss.Commands {
 	[Group("admin")]
 	[RequireAdmin]
+	[NotBot]
 	[Description("Group of commands to manage your voice chat notification settings.")]
 	public class AdminCommands : BaseCommandModule {
 		private readonly GuildSettingsContext _context;
@@ -78,7 +79,7 @@ namespace Gauss.Commands {
 			[Command("message")]
 			public async Task SetWelcomeMessage(CommandContext context, [RemainingText] string message) {
 				ulong guildId = context.GetGuild().Id;
-				if (!this._config.WelcomeMessage.ContainsKey(guildId) ){
+				if (!this._config.WelcomeMessage.ContainsKey(guildId)) {
 					this._config.WelcomeMessage.Add(guildId, message);
 				} else {
 					this._config.WelcomeMessage[guildId] = message;
@@ -90,7 +91,7 @@ namespace Gauss.Commands {
 			[Command("channel")]
 			public async Task SetWelcomeMessageChannel(CommandContext context, ulong channelId) {
 				var guild = context.GetGuild();
-				if (!this._config.WelcomeChannel.ContainsKey(guild.Id) ){
+				if (!this._config.WelcomeChannel.ContainsKey(guild.Id)) {
 					this._config.WelcomeChannel.Add(guild.Id, channelId);
 				} else {
 					this._config.WelcomeChannel[guild.Id] = channelId;

@@ -14,7 +14,6 @@ namespace Gauss.CommandAttributes {
 			if (help) {
 				return Task.FromResult(true);
 			}
-
 			return Task.FromResult(
 				!context.User.IsBot
 			);

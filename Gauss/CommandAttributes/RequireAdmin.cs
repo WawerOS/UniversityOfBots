@@ -13,13 +13,8 @@ using Gauss.Models;
 using Gauss.Utilities;
 
 namespace Gauss.CommandAttributes {
-	public class RequireAdmin : CheckBaseAttribute {
-		private readonly GaussConfig _config;
+	public class RequireAdminAttribute : CheckBaseAttribute {
 		private GuildSettingsContext _context = null;
-		
-		public RequireAdmin() {
-			this._config = GaussConfig.GetInstance();
-		}
 
 		public override Task<bool> ExecuteCheckAsync(CommandContext context, bool help) {
 			if (help) {
@@ -33,7 +28,7 @@ namespace Gauss.CommandAttributes {
 				return Task.FromResult(true);
 			}
 
-			if (_context == null){
+			if (_context == null) {
 				_context = (GuildSettingsContext)context.Services.GetService(typeof(GuildSettingsContext));
 			}
 			return Task.FromResult(

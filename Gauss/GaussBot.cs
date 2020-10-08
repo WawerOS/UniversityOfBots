@@ -6,12 +6,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
+using Gauss.CommandAttributes;
 using Gauss.Commands;
 using Gauss.Database;
 using Gauss.Models;
@@ -81,12 +84,18 @@ namespace Gauss {
 				return Task.CompletedTask;
 			}
 
-			e.Context.Client.Logger.Log(
-				LogLevel.Error,
-				$"Someone tried executing '{e.Command?.QualifiedName ?? "<unknown command>"}' but it errored: {e.Exception}",
+			if (e.Exception is Checks​Failed​Exception checkException) {
+				if (checkException.FailedChecks.Any(ex => ex is CheckDisabledAttribute || ex is RequireAdminAttribute)) {
+					e.Context.Message.CreateReactionAsync(DiscordEmoji.FromUnicode("🚫"));
+				}
+			} else {
+				e.Context.Client.Logger.Log(
+					LogLevel.Error,
+					$"Someone tried executing '{e.Command?.QualifiedName ?? "<unknown command>"}' but it errored: {e.Exception}",
 
-				DateTime.Now
-			);
+					DateTime.Now
+				);
+			}
 			return Task.CompletedTask;
 		}
 

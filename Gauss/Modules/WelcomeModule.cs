@@ -26,11 +26,10 @@ namespace Gauss.Modules {
 		}
 
 		public Task HandleNewMessage(MessageCreateEventArgs e) {
+			if (e.Channel.IsPrivate || e.Author.IsBot) {
+				return Task.CompletedTask;
+			}
 			return Task.Run(async () => {
-				if (e.Channel.IsPrivate) {
-					return;
-				}
-
 				_config.WelcomeChannel.TryGetValue(e.Guild.Id, out ulong welcomeChannel);
 				_config.WelcomeMessage.TryGetValue(e.Guild.Id, out string welcomeMessage);
 				if (welcomeChannel == 0 || welcomeMessage == null) {
