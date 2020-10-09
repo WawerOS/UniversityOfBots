@@ -28,8 +28,9 @@ namespace Gauss.Commands {
 			_pollRepository = pollRepository;
 		}
 
-
 		private DiscordEmbed GetEmbedForPoll(CommandContext context, Poll poll) {
+			// TODO: Render completed poll in a way that better indicates the completion, as well as the vote count(s) and the winning option.
+
 			var optionsText = string.Join(
 				"\n",
 				poll.Options.Select((y) => $"`{y.Id}` - {y.Name}")
@@ -40,7 +41,7 @@ namespace Gauss.Commands {
 				Title = $"Poll #{(poll.Id == 0 ? "pending" : poll.Id.ToString())}:",
 				Description = poll.Description + "\n\n" + optionsText + $"\n\nTo vote, send `!g vote for {poll.Id} <optionNumber>`",
 				Color = DiscordColor.Blurple,
-				Footer = new DiscordEmbedBuilder.EmbedFooter() { Text = $"Proposed by {proposer.Username} at " },
+				Footer = new DiscordEmbedBuilder.EmbedFooter() { Text = $"Status: {poll.State}. Created at" },
 				Timestamp = poll.ProposedAt,
 			};
 
@@ -49,14 +50,14 @@ namespace Gauss.Commands {
 
 
 		/* Stuff to implement / design:
-			- Database for the polls
-			- Database for user's token pools
+			- [WIP] Database for the polls
+			- [WIP] Database for user's token pools
 			- Periodically check if votes have run out of time ->
 				- close the poll
 				- update the original message to indicate that it's decided
 				- post the result
 			- Run a scheduler to reset the token pool
-				- Probably write a general schedular that tasks can be added too.
+				- [DONE] Probably write a general schedular that tasks can be added too.
 				- "run these sets of methods every second" or something.
 
 		*/
@@ -72,10 +73,14 @@ namespace Gauss.Commands {
 		[Description("List polls proposed for the next voting cycle.")]
 		public async Task ListPolls(CommandContext context, PollState status = PollState.Proposal) {
 			var polls = this._pollRepository.ListPolls(context.GetGuild().Id);
-
-			foreach (var poll in polls) {
-				await context.RespondAsync(embed: this.GetEmbedForPoll(context, poll));
-				Thread.Sleep(200);
+			if (polls.Count() <= 5) {
+				foreach (var poll in polls) {
+					await context.RespondAsync(embed: this.GetEmbedForPoll(context, poll));
+					Thread.Sleep(200);
+				}
+			} else {
+				var pollsText = string.Join("\n", polls.Select(poll => $"#{poll.Id} - '{poll.Description}'"));
+				await context.RespondAsync($"These polls have the status `{status}`:\n" + pollsText);
 			}
 		}
 
@@ -87,20 +92,28 @@ namespace Gauss.Commands {
 
 		[Command("retract")]
 		[Description("Retract a proposed poll.")]
-		public async Task RetractPoll(CommandContext context, uint pollId) {
-			await context.RespondAsync("This command is not yet implemented.");
+		public async Task RetractPoll(CommandContext context, int pollId) {
+			var poll = _pollRepository.GetPoll(pollId);
+			if (poll == null) {
+				await context.RespondAsync($"Could not find the poll with ID {pollId}");
+			}
+			if (poll.State != PollState.Proposal) {
+				await context.RespondAsync($"Poll can only be retracted in proposal stage.");
+			}
+
+			await context.CreateConfirmation(
+				$"Retract poll #{poll.Id}:\n \"{poll.Description}\"",
+				() => {
+					poll.State = PollState.Retracted;
+					_pollRepository.UpdatePoll(poll);
+					context.RespondAsync("Poll has been retracted.");
+				}
+			);
 		}
 
 		[Command("propose")]
 		[Description("Propose a new poll to vote for in the next cycle.")]
 		public async Task PostVote(CommandContext context, string description, params string[] options) {
-			/*
-				TODO: Make this specifically always post in the dedicated vote channel.
-				TODO: Ask for confirmation before actually posting the vote.
-			 	TODO: Should a vote be retractable by the person who posted it?
-					If yes: For how long? 10 minutes
-					Either way: Should other people (custodians) have that power?
-			*/
 			var poll = new Poll() {
 				ProposingUser = context.User.Id,
 				GuildId = context.GetGuild().Id,
@@ -113,7 +126,6 @@ namespace Gauss.Commands {
 			};
 
 			DiscordEmbed embed = GetEmbedForPoll(context, poll);
-			// embedBuilder.Timestamp = System.DateTime.UtcNow;
 			await context.RespondAsync("Preview of the poll: ", embed: embed);
 			await context.CreateConfirmation(
 				"Propose the new poll?",
@@ -127,16 +139,26 @@ namespace Gauss.Commands {
 		[Command("for")]
 		[Description("Give your vote for a poll.")]
 		[GroupCommand]
-		public async Task VoteFor(CommandContext context, ulong voteId, ulong optionNumber, uint votes = 1) {
+		public async Task VoteFor(CommandContext context, int pollId, int optionNumber, uint votes = 1) {
+			var poll = _pollRepository.GetPoll(pollId);
+			if (poll == null) {
+				await context.RespondAsync($"Could not find the poll with ID {pollId}");
+				return;
+			}
+			PollOption targetOption = poll.Options.First(y => y.Id == optionNumber);
+			if (poll == null) {
+				await context.RespondAsync($"Could not find option '{optionNumber}'");
+				return;
+			}
 			uint voteCost = votes == 1
 				? 0
 				: ((votes * votes / 2) + (votes / 2) - 1);
-			var confirmationMessage = $"Do you want to vote for {optionNumber} with {votes} vote(s) for {voteCost} tokens?";
+			var confirmationMessage = $"Do you want to vote for:\n{poll.Description}\nWith option `{targetOption.Id} - {targetOption.Name}` and {votes} vote(s) for {voteCost} tokens?";
 
 			await context.CreateConfirmation(
 				confirmationMessage,
 				async () => {
-					await context.RespondAsync("Your vote has been cast");
+					await context.RespondAsync("Your vote has been cast (not really)");
 				}
 			);
 		}
