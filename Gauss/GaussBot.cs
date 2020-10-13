@@ -14,6 +14,7 @@ using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Extensions;
 using Gauss.CommandAttributes;
 using Gauss.Commands;
 using Gauss.Database;
@@ -70,7 +71,7 @@ namespace Gauss {
 			this._client.Ready += this.OnClientReady;
 		}
 
-		private Task OnClientReady(ReadyEventArgs e) {
+		private Task OnClientReady(DiscordClient client, ReadyEventArgs e) {
 			return Task.Run(async () => {
 				if (string.IsNullOrEmpty(this._config.StatusText)) {
 					return;
@@ -79,7 +80,7 @@ namespace Gauss {
 			});
 		}
 
-		private Task Commands_CommandErrored(CommandErrorEventArgs e) {
+		private Task Commands_CommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e) {
 			if (string.IsNullOrEmpty(e.Command?.QualifiedName)) {
 				return Task.CompletedTask;
 			}
@@ -89,7 +90,7 @@ namespace Gauss {
 					e.Context.Message.CreateReactionAsync(DiscordEmoji.FromUnicode("🚫"));
 				}
 			} else {
-				e.Context.Client.Logger.Log(
+				this._client.Logger.Log(
 					LogLevel.Error,
 					$"Someone tried executing '{e.Command?.QualifiedName ?? "<unknown command>"}' but it errored: {e.Exception}",
 

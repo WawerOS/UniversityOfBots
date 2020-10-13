@@ -76,7 +76,7 @@ namespace Gauss.Modules {
 		}
 
 
-		private Task HandleVoiceStateEvent(VoiceStateUpdateEventArgs e) {
+		private Task HandleVoiceStateEvent(DiscordClient client, VoiceStateUpdateEventArgs e) {
 			/* 	3 possible events:
 				A: User joins a voice channel.
 					-> Dispatch one JoinedVoiceChannel event.

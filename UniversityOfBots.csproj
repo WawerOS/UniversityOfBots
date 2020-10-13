@@ -4,14 +4,14 @@
     <LangVersion>8.0</LangVersion>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-	<RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+	  <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
     <RootNamespace>UniversityOfBots</RootNamespace>
   </PropertyGroup>
 
 <ItemGroup>
-  <PackageReference Include="DSharpPlus.Interactivity" Version="4.0.0-nightly-00724" />
-    <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00724" />
-    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.0-nightly-00724" />
+  <PackageReference Include="DSharpPlus.Interactivity" Version="4.0.0-nightly-00741" />
+    <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00741" />
+    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.0-nightly-00741" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.8" />
   </ItemGroup>
 </Project>

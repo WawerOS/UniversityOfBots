@@ -22,7 +22,7 @@ namespace Gauss.Modules {
 			this._client.GuildMemberAdded += this.OnGuildMemberAdded;
 		}
 
-		private Task OnGuildMemberAdded(GuildMemberAddEventArgs e) {
+		private Task OnGuildMemberAdded(DiscordClient client, GuildMemberAddEventArgs e) {
 			// Don't block event handler, by running this in the background:
 			return Task.Run(async () => {
 				// Might need to redo this, for when multiple assigned roles are needed.

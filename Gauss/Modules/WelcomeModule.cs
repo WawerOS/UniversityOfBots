@@ -18,14 +18,14 @@ namespace Gauss.Modules {
 			this._config = config;
 		}
 
-		private Task HandleMessageDeletion(MessageDeleteEventArgs e) {
+		private Task HandleMessageDeletion(DiscordClient client,MessageDeleteEventArgs e) {
 			if (e.Message == this._lastMessage) {
 				this._lastMessage = null;
 			}
 			return Task.CompletedTask;
 		}
 
-		public Task HandleNewMessage(MessageCreateEventArgs e) {
+		public Task HandleNewMessage(DiscordClient client, MessageCreateEventArgs e) {
 			if (e.Channel.IsPrivate || e.Author.IsBot) {
 				return Task.CompletedTask;
 			}
