@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -30,6 +31,27 @@ namespace Gauss {
 		private readonly List<object> _modules = new List<object>();
 		private readonly CommandsNextExtension _commands;
 
+
+		public void RegisterModule(TypeInfo type, IServiceProvider services) {
+			if (type.CustomAttributes.OfType<ModuleInactiveAttribute>().Count() > 0){
+				this._client.Logger.Log(LogLevel.Information, $"Module '{type.Name}' is marked inactive.");
+				return;
+			}
+			this._modules.Add(
+				ActivatorUtilities.CreateInstance(services, type)
+			);
+			this._client.Logger.Log(LogLevel.Information, $"Module '{type.Name}' registered and active.");
+		}
+
+		public void RegisterModules(Assembly assembly, IServiceProvider services ){
+			var modules = assembly.DefinedTypes.Where(type => type.IsSubclassOf(typeof(BaseModule)));
+			foreach (var module in modules)
+			{
+				this.RegisterModule(module, services);
+			}
+			_client.Logger.Log(LogLevel.Information, $"Found {modules.Count()} non-command modules");
+		}
+
 		public GaussBot(GaussConfig config) {
 			this._config = config;
 			this._client = new DiscordClient(new DiscordConfiguration {
@@ -39,6 +61,7 @@ namespace Gauss {
 				.AddDbContext<UserSettingsContext>(ServiceLifetime.Singleton)
 				.AddDbContext<GuildSettingsContext>(ServiceLifetime.Singleton)
 				.AddSingleton(this._config)
+				.AddSingleton(this._client)
 				.BuildServiceProvider();
 
 			var commandConfig = new CommandsNextConfiguration {
@@ -62,10 +85,9 @@ namespace Gauss {
 			this._commands.RegisterCommands<AdminCommands>();
 			this._commands.RegisterCommands<MiscCommands>();
 			// this._commands.RegisterCommands<VoiceCommands>();
-			// this._modules.Add(new RoleAssign(this._client, _config));
-			this._modules.Add(new WelcomeModule(this._client, this._config));
-			this._modules.Add(new RedditLinker(this._client, this._config));
-			this._modules.Add(new VCModule(this._client, this._config, commandServices));
+
+			this.RegisterModules(Assembly.GetExecutingAssembly(), commandServices);
+
 			this._commands.CommandErrored += this.Commands_CommandErrored;
 
 			this._client.Ready += this.OnClientReady;

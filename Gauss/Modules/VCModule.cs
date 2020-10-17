@@ -13,7 +13,6 @@ using DSharpPlus.EventArgs;
 using Gauss.Database;
 using Gauss.Models;
 using Gauss.Utilities;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Gauss.Modules {
 	public class VoiceChannelChangeEvent {
@@ -22,14 +21,14 @@ namespace Gauss.Modules {
 		public bool HasJoined { get; set; } // true: joined. false: left.
 	}
 
-	public class VCModule {
+	public class VCModule : BaseModule {
 		private readonly GaussConfig _config;
 		private readonly UserSettingsContext _settings;
 		
 
-		public VCModule(DiscordClient client, GaussConfig config, ServiceProvider commandServices) {
+		public VCModule(DiscordClient client, GaussConfig config, UserSettingsContext settings) {
 			this._config = config;
-			this._settings = commandServices.GetService<UserSettingsContext>();
+			this._settings = settings;
 			client.VoiceStateUpdated += this.HandleVoiceStateEvent;
 		}
 

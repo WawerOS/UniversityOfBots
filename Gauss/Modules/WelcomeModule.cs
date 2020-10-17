@@ -1,4 +1,9 @@
-using System;
+/**
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+**/
+
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DSharpPlus;
@@ -7,7 +12,7 @@ using DSharpPlus.EventArgs;
 using Gauss.Models;
 
 namespace Gauss.Modules {
-	public class WelcomeModule {
+	public class WelcomeModule : BaseModule {
 		private readonly GaussConfig _config;
 		private DiscordMessage _lastMessage;
 		private readonly Regex _triggerExpression = new Regex("(met gauss|meet gauss)", RegexOptions.IgnoreCase);

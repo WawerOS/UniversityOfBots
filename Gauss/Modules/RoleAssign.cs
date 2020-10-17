@@ -11,7 +11,8 @@ using DSharpPlus.EventArgs;
 using Gauss.Models;
 
 namespace Gauss.Modules {
-	public class RoleAssign {
+	[ModuleInactive]
+	public class RoleAssign : BaseModule {
 		private readonly DiscordClient _client;
 		private readonly GaussConfig _config;
 

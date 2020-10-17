@@ -12,26 +12,26 @@ using Gauss.Models;
 
 namespace Gauss.Modules {
 
-	class RedditLinker {
+	class RedditLinker : BaseModule {
 		private readonly GaussConfig _config;
 
-		public RedditLinker(DiscordClient client, GaussConfig config) {
-			client.MessageCreated += this.HandleNewMessage;
+		public RedditLinker(GaussConfig config, DiscordClient client) {
 			this._config = config;
+			client.MessageCreated += this.HandleNewMessage;
 		}
 
 		public Task HandleNewMessage(DiscordClient client, MessageCreateEventArgs e) {
 			return Task.Run(async () => {
-				// bool channelWhitelisted = _config.RedditEnabledChannels?.Contains(e.Channel.Id) == true;
-				// if (!channelWhitelisted) {
-				// 	if (e.Channel.ParentId.HasValue) {
-				// 		channelWhitelisted = _config.RedditEnabledChannels?.Contains(e.Channel.ParentId.Value) == true;
-				// 	}
-				// }
+				bool channelWhitelisted = _config.RedditEnabledChannels?.Contains(e.Channel.Id) == true;
+				if (!channelWhitelisted) {
+					if (e.Channel.ParentId.HasValue) {
+						channelWhitelisted = _config.RedditEnabledChannels?.Contains(e.Channel.ParentId.Value) == true;
+					}
+				}
 
-				// if (e.Author.IsBot || !channelWhitelisted) {
-				// 	return;
-				// }
+				if (e.Author.IsBot || !channelWhitelisted) {
+					return;
+				}
 				var redditRegex = new Regex(@"(?<!^>)((?:^|\s)\/?r\/\w{2,21}\b)", RegexOptions.Multiline);
 				var redditMatches = redditRegex.Matches(e.Message.Content);
 				List<string> validSubs = new List<string>();
