@@ -11,12 +11,28 @@ using System.IO;
 using Gauss.Utilities;
 
 namespace Gauss.Models {
+	public class GuildConfig {
+		[JsonProperty("folding_team")]
+		public string FoldingTeam { get; set; }
+		[JsonProperty("folding_channel")]
+		public ulong FoldingChannel { get; set; }
+
+		[JsonProperty("welcome_message")]
+		public string WelcomeMessage { get; set; }
+
+		[JsonProperty("welcome_channel")]
+		public ulong WelcomeChannel { get; set; }
+	}
+
 	public class GaussConfig {
 		private static GaussConfig _instance;
 		private static string _directory;
 
 		[JsonProperty("discord_token")]
 		public string DiscordToken { get; set; }
+
+		[JsonProperty("guild_configs")]
+		public Dictionary<ulong, GuildConfig> GuildConfigs { get; set; } = new Dictionary<ulong, GuildConfig>();
 
 		[JsonProperty("command_prefix")]
 		public string CommandPrefix { get; set; }
@@ -29,11 +45,6 @@ namespace Gauss.Models {
 
 		[JsonProperty("status_text")]
 		public string StatusText { get; set; }
-
-		[JsonProperty("welcome_message")]
-		public Dictionary<ulong, string> WelcomeMessage {get; set;} = new Dictionary<ulong, string>();
-		[JsonProperty("welcome_channel")]
-		public Dictionary<ulong, ulong> WelcomeChannel {get; set;} = new Dictionary<ulong, ulong>();
 
 		public List<ulong> RedditEnabledChannels { get; set; }
 

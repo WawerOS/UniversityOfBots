@@ -16,6 +16,7 @@ using Gauss.Utilities;
 namespace Gauss.Commands {
 	[Group("send")]
 	[NotBot]
+	[NeedsGuild]
 	[CheckDisabled]
 	public class SendMessageCommands : BaseCommandModule {
 		private readonly UserSettingsContext _dbContext;

@@ -10,12 +10,14 @@ using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using Gauss.CommandAttributes;
 using Gauss.Database;
 using Gauss.Models;
 using Gauss.Utilities;
 
 namespace Gauss.Commands {
 	[Group("voice")]
+	[NeedsGuild]
 	[Description("Group of commands to manage your voice chat notification settings.")]
 	public class VoiceCommands : BaseCommandModule {
 		private readonly UserSettingsContext _settings;

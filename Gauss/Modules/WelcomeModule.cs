@@ -23,7 +23,7 @@ namespace Gauss.Modules {
 			this._config = config;
 		}
 
-		private Task HandleMessageDeletion(DiscordClient client,MessageDeleteEventArgs e) {
+		private Task HandleMessageDeletion(DiscordClient client, MessageDeleteEventArgs e) {
 			if (e.Message == this._lastMessage) {
 				this._lastMessage = null;
 			}
@@ -35,12 +35,13 @@ namespace Gauss.Modules {
 				return Task.CompletedTask;
 			}
 			return Task.Run(async () => {
-				_config.WelcomeChannel.TryGetValue(e.Guild.Id, out ulong welcomeChannel);
-				_config.WelcomeMessage.TryGetValue(e.Guild.Id, out string welcomeMessage);
-				if (welcomeChannel == 0 || welcomeMessage == null) {
+				if (!this._config.GuildConfigs.TryGetValue(e.Guild.Id, out GuildConfig guildConfig)) {
 					return;
 				}
-				if (e.Channel.Id != welcomeChannel) {
+				if (guildConfig.WelcomeChannel == 0 || guildConfig.WelcomeMessage == null) {
+					return;
+				}
+				if (e.Channel.Id != guildConfig.WelcomeChannel) {
 					return;
 				}
 
@@ -48,7 +49,7 @@ namespace Gauss.Modules {
 					if (this._lastMessage != null) {
 						await this._lastMessage.ModifyAsync("[This previously contained the welcome message]");
 					}
-					this._lastMessage = await e.Channel.SendMessageAsync(welcomeMessage);
+					this._lastMessage = await e.Channel.SendMessageAsync(guildConfig.WelcomeMessage);
 				}
 			});
 		}

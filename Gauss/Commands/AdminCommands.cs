@@ -15,6 +15,7 @@ using Gauss.Models;
 
 namespace Gauss.Commands {
 	[Group("admin")]
+	[NeedsGuild]
 	[RequireAdmin]
 	[NotBot]
 	[Description("Group of commands to manage your voice chat notification settings.")]
@@ -76,26 +77,30 @@ namespace Gauss.Commands {
 				this._config = config;
 			}
 
+			public override Task BeforeExecutionAsync(CommandContext context) {
+				var guildId = context.GetGuild().Id;
+				if (this._config.GuildConfigs.ContainsKey(guildId)) {
+
+					this._config.GuildConfigs.Add(guildId, new GuildConfig());
+				}
+
+				return base.BeforeExecutionAsync(context);
+			}
+
 			[Command("message")]
 			public async Task SetWelcomeMessage(CommandContext context, [RemainingText] string message) {
 				ulong guildId = context.GetGuild().Id;
-				if (!this._config.WelcomeMessage.ContainsKey(guildId)) {
-					this._config.WelcomeMessage.Add(guildId, message);
-				} else {
-					this._config.WelcomeMessage[guildId] = message;
-				}
+
+				this._config.GuildConfigs[guildId].WelcomeMessage = message;
 				await context.RespondAsync("New message saved.");
 				this._config.Save();
 			}
 
 			[Command("channel")]
 			public async Task SetWelcomeMessageChannel(CommandContext context, ulong channelId) {
-				var guild = context.GetGuild();
-				if (!this._config.WelcomeChannel.ContainsKey(guild.Id)) {
-					this._config.WelcomeChannel.Add(guild.Id, channelId);
-				} else {
-					this._config.WelcomeChannel[guild.Id] = channelId;
-				}
+				ulong guildId = context.GetGuild().Id;
+
+				this._config.GuildConfigs[guildId].WelcomeChannel = channelId;
 				this._config.Save();
 				await context.RespondAsync($"Target channel (<#{channelId}>) saved.");
 			}
