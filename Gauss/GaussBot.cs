@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -21,6 +22,7 @@ using Gauss.Commands;
 using Gauss.Database;
 using Gauss.Models;
 using Gauss.Modules;
+using Gauss.Scheduling;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -30,26 +32,26 @@ namespace Gauss {
 		private readonly GaussConfig _config;
 		private readonly List<object> _modules = new List<object>();
 		private readonly CommandsNextExtension _commands;
+		private readonly Scheduler _scheduler = new Scheduler();
 
 
 		public void RegisterModule(TypeInfo type, IServiceProvider services) {
-			if (type.CustomAttributes.OfType<ModuleInactiveAttribute>().Count() > 0){
-				this._client.Logger.Log(LogLevel.Information, $"Module '{type.Name}' is marked inactive.");
+			if (type.CustomAttributes.OfType<ModuleInactiveAttribute>().Count() > 0) {
+				this._client.Logger.LogInformation($"Module '{type.Name}' is marked inactive.");
 				return;
 			}
 			this._modules.Add(
 				ActivatorUtilities.CreateInstance(services, type)
 			);
-			this._client.Logger.Log(LogLevel.Information, $"Module '{type.Name}' registered and active.");
+			this._client.Logger.LogInformation($"Module '{type.Name}' registered and active.");
 		}
 
-		public void RegisterModules(Assembly assembly, IServiceProvider services ){
+		public void RegisterModules(Assembly assembly, IServiceProvider services) {
 			var modules = assembly.DefinedTypes.Where(type => type.IsSubclassOf(typeof(BaseModule)));
-			foreach (var module in modules)
-			{
+			foreach (var module in modules) {
 				this.RegisterModule(module, services);
 			}
-			_client.Logger.Log(LogLevel.Information, $"Found {modules.Count()} non-command modules");
+			_client.Logger.LogInformation($"Found {modules.Count()} non-command modules");
 		}
 
 		public GaussBot(GaussConfig config) {
@@ -60,6 +62,7 @@ namespace Gauss {
 			var commandServices = new ServiceCollection()
 				.AddDbContext<UserSettingsContext>(ServiceLifetime.Singleton)
 				.AddDbContext<GuildSettingsContext>(ServiceLifetime.Singleton)
+				.AddSingleton(this._scheduler)
 				.AddSingleton(this._config)
 				.AddSingleton(this._client)
 				.BuildServiceProvider();
@@ -84,7 +87,7 @@ namespace Gauss {
 			this._commands.RegisterCommands<SendMessageCommands>();
 			this._commands.RegisterCommands<AdminCommands>();
 			this._commands.RegisterCommands<MiscCommands>();
-			// this._commands.RegisterCommands<VoiceCommands>();
+			this._commands.RegisterCommands<FoldingCommands>();
 
 			this.RegisterModules(Assembly.GetExecutingAssembly(), commandServices);
 
@@ -111,13 +114,39 @@ namespace Gauss {
 				if (checkException.FailedChecks.Any(ex => ex is CheckDisabledAttribute || ex is RequireAdminAttribute)) {
 					e.Context.Message.CreateReactionAsync(DiscordEmoji.FromUnicode("🚫"));
 				}
-			} else {
-				this._client.Logger.Log(
-					LogLevel.Error,
-					$"Someone tried executing '{e.Command?.QualifiedName ?? "<unknown command>"}' but it errored: {e.Exception}",
+				if (checkException.FailedChecks.Any(ex => ex is NeedsGuildAttribute)) {
+					e.Context.Message.CreateReactionAsync(DiscordEmoji.FromUnicode("Could not determine a server to execute this command for."));
+				}
 
-					DateTime.Now
-				);
+			} else {
+				if (e.Command != null) {
+					var command = e.Command;
+					var sb = new StringBuilder();
+
+					foreach (var ovl in command.Overloads.OrderByDescending(x => x.Priority)) {
+						sb.Append('`')
+							.Append(command.QualifiedName);
+
+						foreach (var arg in ovl.Arguments) {
+							sb.Append(arg.IsOptional || arg.IsCatchAll
+								? " ["
+								: " <"
+							)
+							.Append(arg.Name)
+							.Append(arg.IsCatchAll ? "..." : "")
+							.Append(arg.IsOptional || arg.IsCatchAll ? ']' : '>');
+						}
+						sb.Append("`");
+					}
+					e.Context.Member.SendMessageAsync($"Invalid syntax for `{e.Command.QualifiedName}`. Syntax:\n{sb}");
+
+				} else {
+					this._client.Logger.LogError(
+						e.Exception,
+						$"Someone tried executing an unknown command.",
+						DateTime.Now
+					);
+				}
 			}
 			return Task.CompletedTask;
 		}
