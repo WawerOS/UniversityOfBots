@@ -25,7 +25,6 @@ namespace Gauss.Models {
 	}
 
 	public class GaussConfig {
-		private static GaussConfig _instance;
 		private static string _directory;
 
 		[JsonProperty("discord_token")]
@@ -48,30 +47,26 @@ namespace Gauss.Models {
 
 		public List<ulong> RedditEnabledChannels { get; set; }
 
+		[JsonIgnore]
+		public string ConfigDirectory { get; set; }
+
 		public GaussConfig() {
 
 		}
 
-		public static GaussConfig GetInstance() {
-			if (_instance == null) {
-				_instance = new GaussConfig();
-			}
-			return _instance;
-		}
-
-		public static GaussConfig GetInstance(string configDirectory) {
+		public static GaussConfig ReadConfig(string configDirectory) {
 			_directory = configDirectory;
-			if (_instance == null) {
-				if (!Directory.Exists(configDirectory)) {
-					throw new Exception($"Config directory '{configDirectory}' does not exist.");
-				}
-				if (!File.Exists(Path.Join(configDirectory, "config.json"))) {
-					throw new Exception($"'config.json' was not found in '{configDirectory}'.");
-				}
-
-				_instance = JsonUtility.Deserialize<GaussConfig>(Path.Join(configDirectory, "config.json"));
+			if (!Directory.Exists(configDirectory)) {
+				throw new Exception($"Config directory '{configDirectory}' does not exist.");
 			}
-			return _instance;
+			if (!File.Exists(Path.Join(configDirectory, "config.json"))) {
+				throw new Exception($"'config.json' was not found in '{configDirectory}'.");
+			}
+
+			var config = JsonUtility.Deserialize<GaussConfig>(Path.Join(configDirectory, "config.json"));
+
+			config.ConfigDirectory = configDirectory;
+			return config;
 		}
 
 		public void Save() {

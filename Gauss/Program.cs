@@ -23,7 +23,7 @@ namespace Gauss {
 			if (args.Length > 0 && args[0] == "--configDir") {
 				configDirectory = args[1];
 			}
-			GaussConfig config = GaussConfig.GetInstance(configDirectory);
+			GaussConfig config = GaussConfig.ReadConfig(configDirectory);
 
 			_botInstance = new GaussBot(config);
 			_botInstance.Connect();
