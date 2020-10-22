@@ -9,11 +9,15 @@ using System.IO;
 using System.Threading.Tasks;
 using Gauss.Models;
 using static System.Environment;
+using System.Globalization;
+
 
 namespace Gauss {
 	public class Program {
 		private static GaussBot _botInstance;
 		public async static Task Main(string[] args) {
+			CultureInfo.CurrentCulture = new CultureInfo("C", false);
+
 			string configDirectory = Path.Join(GetFolderPath(SpecialFolder.UserProfile), "GaussBot");
 
 			if (args.Length > 0 && args[0] == "--configDir") {
