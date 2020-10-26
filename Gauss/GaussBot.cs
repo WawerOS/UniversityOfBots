@@ -64,6 +64,7 @@ namespace Gauss {
 			var commandServices = new ServiceCollection()
 				.AddDbContext<UserSettingsContext>(ServiceLifetime.Singleton)
 				.AddDbContext<GuildSettingsContext>(ServiceLifetime.Singleton)
+				.AddSingleton(new ElectionRepository(config.ConfigDirectory))
 				.AddSingleton(this._scheduler)
 				.AddSingleton(this._config)
 				.AddSingleton(this._client)
@@ -90,7 +91,9 @@ namespace Gauss {
 			this._commands.RegisterCommands<AdminCommands>();
 			this._commands.RegisterCommands<MiscCommands>();
 			this._commands.RegisterCommands<FoldingCommands>();
+			this._commands.RegisterCommands<ElectionCommands>();
 
+			// this._commands.RegisterCommands<VoiceCommands>();
 			this.RegisterModules(Assembly.GetExecutingAssembly(), commandServices);
 
 			this._commands.CommandErrored += this.Commands_CommandErrored;
