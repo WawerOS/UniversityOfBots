@@ -14,6 +14,8 @@ using Newtonsoft.Json;
 
 namespace Gauss.Models.Elections {
 	public class Election {
+
+
 		public ElectionStatus Status { get; set; }
 		public ulong GuildId { get; set; }
 		public ulong ID { get; set; }
@@ -71,6 +73,28 @@ namespace Gauss.Models.Elections {
 				embedBuilder.Footer = new DiscordEmbedBuilder.EmbedFooter() { Text = this.GetHash() };
 			}
 			return embedBuilder.Build();
+		}
+
+		public string GetResults() {
+			var stringBuilder = new StringBuilder();
+			var sortedCandidates = this.Candidates.OrderByDescending(y => y.Votes);
+			int place = 1;
+			foreach (var candidate in sortedCandidates) {
+				stringBuilder
+					.Append(place)
+					.Append(". ")
+					.Append(candidate.Username)
+					.Append(": ")
+					.Append(candidate.Votes)
+					.Append("\n");
+
+				place++;
+			}
+			stringBuilder
+				.Append(this.Voters.Count)
+				.Append(" have cast their vote.");
+
+			return stringBuilder.ToString();
 		}
 	}
 }

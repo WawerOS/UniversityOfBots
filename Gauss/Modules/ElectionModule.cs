@@ -1,14 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DSharpPlus;
-using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
-using Gauss.Commands;
 using Gauss.Models;
 using Gauss.Database;
 using Gauss.Scheduling;
@@ -40,18 +32,14 @@ namespace Gauss.Modules {
 			if (activeElections.Count == 0) {
 				return;
 			}
-			Console.WriteLine("UpdateElections");
 			foreach (var election in activeElections) {
 				if (election.Message == null) {
-					Console.WriteLine("Found election w/o message.");
 					if (election.Start <= DateTime.UtcNow) {
 						var voteChannel = this._client
 							.Guilds[election.GuildId]
 							.Channels[this._config.GuildConfigs[election.GuildId].VoteChannel];
 
-						Console.WriteLine("Sending message.");
 						var message = await voteChannel.SendMessageAsync(embed: election.GetEmbed());
-						Console.WriteLine("Sent message.");
 						election.Message = new Models.Elections.MessageReference() {
 							GuildId = election.GuildId,
 							ChannelId = message.ChannelId,
@@ -61,7 +49,13 @@ namespace Gauss.Modules {
 				} else {
 					if (election.End <= DateTime.UtcNow) {
 						await election.Message.UpdateMessage(this._client, election.GetEmbed());
+						var voteChannel = this._client
+							.Guilds[election.GuildId]
+							.Channels[this._config.GuildConfigs[election.GuildId].VoteChannel];
 						election.Status = Models.Elections.ElectionStatus.Decided;
+						await voteChannel.SendMessageAsync(
+							$"Election #{election.ID} for {election.Title} has concluded. Results:\n{election.GetResults()}"
+						);
 					}
 				}
 			}

@@ -13,10 +13,7 @@ using Gauss.Models;
 namespace Gauss.Modules {
 
 	class RedditLinker : BaseModule {
-		private readonly GaussConfig _config;
-
-		public RedditLinker(GaussConfig config, DiscordClient client) {
-			this._config = config;
+		public RedditLinker(DiscordClient client) {
 			client.MessageCreated += this.HandleNewMessage;
 		}
 
