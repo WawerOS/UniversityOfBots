@@ -6,6 +6,7 @@
 
 - [election create](#election-create)
 - [election vote](#election-vote)
+
 ---
 
 ### election create

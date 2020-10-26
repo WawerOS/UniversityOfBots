@@ -21,6 +21,12 @@ Click on the headlines to get to detailed documentation of all available command
 
 You can send anonymous messages through Gauss with the `send` command.
 
+### [election](./election/README.md)
+
+You can participate in elections on the server. The system uses [approval voting](https://en.wikipedia.org/wiki/Approval_voting).
+
+The bot will post polls in a configured channels with the information you need. **You can vote by sending the command in a private message.**
+
 ### [admin](./admin/README.md)
 
 You can access moderation options through various `admin` commands.

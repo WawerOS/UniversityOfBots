@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using Gauss.Utilities;
-using DSharpPlus.Entities;
 using Gauss.CommandAttributes;
 using Gauss.Models.Elections;
 using System;
@@ -18,7 +17,7 @@ using Gauss.Database;
 
 namespace Gauss.Commands {
 	[Group("election")]
-	[Description("voting commands")]
+	[Description("Commands to participate in elections")]
 	[RequireGuild]
 	[CheckDisabled]
 	public class ElectionCommands : BaseCommandModule {
@@ -28,12 +27,8 @@ namespace Gauss.Commands {
 			_pollRepository = pollRepository;
 		}
 
-
-
-
-		[Command("draft")]
-		[Aliases("create")]
-		[Description("Draft a new election. The details can be edited with other commands until finalized.")]
+		[Command("create")]
+		[Description("Create a new election.")]
 		[RequireAdmin]
 		public async Task CreateElection(
 			CommandContext context,
@@ -46,6 +41,8 @@ namespace Gauss.Commands {
 			[Description("List of candidates. Either by username or displayname")]
 			params string[] candidateNames
 		) {
+			// TODO: "start" and "end" don't parse as UTC. I don't know why. 
+
 			var guild = context.GetGuild();
 			List<Candidate> candidates = new List<Candidate>();
 			List<string> missingCandidates = new List<string>();
@@ -79,11 +76,15 @@ namespace Gauss.Commands {
 			);
 		}
 
-
-
 		[Command("vote")]
 		[Description("Vote for one or more candidates. The voting system is approval voting.")]
-		public async Task VoteFor(CommandContext context, ulong electionId, params string[] candidateNames) {
+		public async Task VoteFor(
+			CommandContext context, 
+			[Description("ID of the election you want to vote in")]
+			ulong electionId, 
+			[Description("Usernames of candidates you approve.")]
+			params string[] candidateNames
+		) {
 			var guild = context.GetGuild();
 			var member = guild.Members[context.User.Id];
 			var voterStatus = _pollRepository.CanVote(guild.Id, electionId, member.Id);

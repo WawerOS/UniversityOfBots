@@ -6,12 +6,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 namespace Gauss.Models.Elections {
 	/// <summary>
-	/// Status of an election poll.
+	/// Possible states a user can have in regards to eligiblity to vote in a given election.
 	/// </summary>
-	public enum ElectionStatus {
-		
-		Draft,
-		Active,
-		Decided,
+	public enum VoteStatus {
+		CanVote,
+		AlreadyVoted,
+		NotAllowed, // Currently unused.
+		ElectionNotFound,
+		ElectionNotStarted,
+		ElectionOver,
 	}
 }
