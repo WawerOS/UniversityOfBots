@@ -32,7 +32,7 @@ namespace Gauss {
 		private readonly GaussConfig _config;
 		private readonly List<object> _modules = new List<object>();
 		private readonly CommandsNextExtension _commands;
-		private readonly Scheduler _scheduler = new Scheduler();
+		private readonly Scheduler _scheduler;
 
 
 		public void RegisterModule(TypeInfo type, IServiceProvider services) {
@@ -59,6 +59,8 @@ namespace Gauss {
 			this._client = new DiscordClient(new DiscordConfiguration {
 				Token = config.DiscordToken,
 			});
+
+			this._scheduler = new Scheduler(this._client);
 			var commandServices = new ServiceCollection()
 				.AddDbContext<UserSettingsContext>(ServiceLifetime.Singleton)
 				.AddDbContext<GuildSettingsContext>(ServiceLifetime.Singleton)
@@ -138,7 +140,11 @@ namespace Gauss {
 						}
 						sb.Append("`");
 					}
-					e.Context.Member.SendMessageAsync($"Invalid syntax for `{e.Command.QualifiedName}`. Syntax:\n{sb}");
+					if (e.Context.Channel.IsPrivate) {
+						e.Context.RespondAsync($"Invalid syntax for `{e.Command.QualifiedName}`. Syntax:\n{sb}");
+					} else {
+						e.Context.Member.SendMessageAsync($"Invalid syntax for `{e.Command.QualifiedName}`. Syntax:\n{sb}");
+					}
 
 				} else {
 					this._client.Logger.LogError(

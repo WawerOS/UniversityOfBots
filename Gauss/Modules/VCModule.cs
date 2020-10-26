@@ -24,7 +24,7 @@ namespace Gauss.Modules {
 	public class VCModule : BaseModule {
 		private readonly GaussConfig _config;
 		private readonly UserSettingsContext _settings;
-		
+
 
 		public VCModule(DiscordClient client, GaussConfig config, UserSettingsContext settings) {
 			this._config = config;
@@ -65,7 +65,7 @@ namespace Gauss.Modules {
 						continue;
 					}
 					var dmChannel = await member.CreateDmChannelAsync();
-					await dmChannel.SendMessageAsync($"{joinedUser.Username} just joined the {channel.Name} voice channel!");
+					await dmChannel.SendMessageAsync($"A user just joined the {channel.Name} voice channel!");
 					config.IsInTimeout = true;
 				} catch (Exception ex) {
 					throw new Exception($"Exception while trying to notify {config.UserId} about voice chat. {ex}");

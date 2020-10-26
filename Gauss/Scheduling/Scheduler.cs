@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using DSharpPlus;
+using DSharpPlus.EventArgs;
 
 namespace Gauss.Scheduling {
 
@@ -18,10 +20,15 @@ namespace Gauss.Scheduling {
 		private readonly CancellationTokenSource _cancellationToken = new CancellationTokenSource();
 		private readonly object _lock = new object();
 
-		public Scheduler() {
+		public Scheduler(DiscordClient client) {
 			this._tasks = new List<IScheduledTask>();
 
+			client.Ready += this.OnReady;
+		}
+
+		private Task OnReady(DiscordClient sender, ReadyEventArgs e) {
 			this.RunSchedule();
+			return Task.CompletedTask;
 		}
 
 		~Scheduler() {

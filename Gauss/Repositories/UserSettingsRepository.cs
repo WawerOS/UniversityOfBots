@@ -27,6 +27,7 @@ namespace Gauss.Database {
 			modelBuilder.Entity<UserMessageSettings>()
 				.HasKey(e => new { e.GuildId, e.UserId });
 		}
+
 		public UserSettingsContext() {
 			this.Database.EnsureCreated();
 		}

@@ -198,7 +198,6 @@ namespace Gauss.Commands {
 			}
 		}
 
-
 		[Command("unnotify")]
 		[Aliases("disable")]
 		[Description("Deactivate voice chat notifications entirely. This will keep your settings intact for later reactivation")]
