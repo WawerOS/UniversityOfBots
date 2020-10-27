@@ -17,8 +17,10 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
+using Emzi0767.Utilities;
 using Gauss.CommandAttributes;
 using Gauss.Commands;
+using Gauss.Converters;
 using Gauss.Database;
 using Gauss.Models;
 using Gauss.Modules;
@@ -57,6 +59,7 @@ namespace Gauss {
 		public GaussBot(GaussConfig config) {
 			this._config = config;
 			this._client = new DiscordClient(new DiscordConfiguration {
+				Intents = DiscordIntents.AllUnprivileged | DiscordIntents.GuildMembers,
 				Token = config.DiscordToken,
 			});
 
@@ -83,22 +86,26 @@ namespace Gauss {
 				EnableMentionPrefix = true,
 			};
 
-
 			this._client.UseCommandsNext(commandConfig);
+			this._client.GuildAvailable += this.OnGuildAvailable;
 			this._client.UseInteractivity(new InteractivityConfiguration { });
 			this._commands = this._client.GetCommandsNext();
+			this._commands.RegisterConverter(new DateTimeConverter());
 			this._commands.RegisterCommands<SendMessageCommands>();
 			this._commands.RegisterCommands<AdminCommands>();
 			this._commands.RegisterCommands<MiscCommands>();
 			this._commands.RegisterCommands<FoldingCommands>();
 			this._commands.RegisterCommands<ElectionCommands>();
-
-			// this._commands.RegisterCommands<VoiceCommands>();
 			this.RegisterModules(Assembly.GetExecutingAssembly(), commandServices);
 
 			this._commands.CommandErrored += this.Commands_CommandErrored;
 
 			this._client.Ready += this.OnClientReady;
+		}
+
+		private Task OnGuildAvailable(DiscordClient client, GuildCreateEventArgs e) {
+			// Get the member list cached, otherwise certain features don't work correctly.
+			return Task.Run( async () => await e.Guild.RequestMembersAsync());
 		}
 
 		private Task OnClientReady(DiscordClient client, ReadyEventArgs e) {
@@ -123,7 +130,7 @@ namespace Gauss {
 					e.Context.Message.CreateReactionAsync(DiscordEmoji.FromUnicode("Could not determine a server to execute this command for."));
 				}
 
-			} else {
+			} else if(e.Exception is ArgumentException) {
 				if (e.Command != null) {
 					var command = e.Command;
 					var sb = new StringBuilder();
@@ -149,14 +156,15 @@ namespace Gauss {
 						e.Context.Member.SendMessageAsync($"Invalid syntax for `{e.Command.QualifiedName}`. Syntax:\n{sb}");
 					}
 
-				} else {
-					this._client.Logger.LogError(
-						e.Exception,
-						$"Someone tried executing an unknown command.",
-						DateTime.Now
-					);
-				}
+				} 
+				
+			
 			}
+			this._client.Logger.LogError(
+					e.Exception,
+					$"Someone tried executing an unknown command.",
+					DateTime.Now
+				);
 			return Task.CompletedTask;
 		}
 
