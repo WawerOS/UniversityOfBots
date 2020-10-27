@@ -4,6 +4,7 @@ using DSharpPlus;
 using Gauss.Models;
 using Gauss.Database;
 using Gauss.Scheduling;
+using Microsoft.Extensions.Logging;
 
 namespace Gauss.Modules {
 	/// <summary>
@@ -48,11 +49,16 @@ namespace Gauss.Modules {
 
 			// TODO: This is not as threadsafe as I'd like it to be. I might have to move some of this into the repository.
 			foreach (var election in activeElections) {
+				var voteChannelId = this._config.GuildConfigs[election.GuildId].VoteChannel;
+				if (voteChannelId == 0){
+					this._client.Logger.LogError("No vote channel specified.");
+					break;
+				}
 				if (election.Message == null) {
 					if (election.Start <= DateTime.UtcNow) {
 						var voteChannel = this._client
 							.Guilds[election.GuildId]
-							.Channels[this._config.GuildConfigs[election.GuildId].VoteChannel];
+							.Channels[voteChannelId];
 
 						var message = await voteChannel.SendMessageAsync(embed: election.GetEmbed());
 						election.Message = new Models.Elections.MessageReference() {
@@ -67,7 +73,7 @@ namespace Gauss.Modules {
 						await election.Message.UpdateMessage(this._client, election.GetEmbed());
 						var voteChannel = this._client
 							.Guilds[election.GuildId]
-							.Channels[this._config.GuildConfigs[election.GuildId].VoteChannel];
+							.Channels[voteChannelId];
 						await voteChannel.SendMessageAsync(
 							$"Election #{election.ID} for {election.Title} has concluded. Results:\n{election.GetResults()}"
 						);

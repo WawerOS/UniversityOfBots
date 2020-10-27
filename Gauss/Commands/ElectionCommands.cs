@@ -14,6 +14,7 @@ using Gauss.CommandAttributes;
 using Gauss.Models.Elections;
 using System;
 using Gauss.Database;
+using DSharpPlus.Entities;
 
 namespace Gauss.Commands {
 	[Group("election")]
@@ -38,21 +39,31 @@ namespace Gauss.Commands {
 			DateTime start,
 			[Description("Planned end of the election (UTC).")]
 			DateTime end,
-			[Description("List of candidates. Either by username or displayname")]
-			params string[] candidateNames
+			[Description("List of candidates.")]
+			params DiscordUser[] candidateNames
 		) {
-			// TODO: "start" and "end" don't parse as UTC. I don't know why. 
-
-			var guild = context.GetGuild();
-			List<Candidate> candidates = new List<Candidate>();
-			List<string> missingCandidates = new List<string>();
-			foreach (var item in candidateNames) {
-				var member = guild.FindMember(item);
-				if (member == null) {
-					missingCandidates.Add(item);
-				}
-				candidates.Add(new Candidate() { UserId = member.Id, Username = member.Username, Votes = 0 });
+			if (start <= DateTime.UtcNow){
+				await context.RespondAsync($"`start` must not be in the past.");
+				return;
 			}
+			if (start > end){
+				await context.RespondAsync($"`start` must be before `end`.");
+				return;
+			}
+			if (candidateNames.Distinct().Count() != candidateNames.Count()){
+				await context.RespondAsync("You have duplicate names in the candidate list.");
+				return;
+			}
+			
+			var guild = context.GetGuild();
+
+			List<Candidate> candidates = new List<Candidate>();
+			candidates = candidateNames.Select((item, index) => new Candidate{
+				Option = char.ConvertFromUtf32(65+index),
+				UserId = item.Id, 
+				Username = item.Username + "#" + item.Discriminator, 
+				Votes = 0,
+			}).ToList();
 			var election = new Election() {
 				Candidates = candidates,
 				Title = title,
@@ -82,12 +93,12 @@ namespace Gauss.Commands {
 			CommandContext context, 
 			[Description("ID of the election you want to vote in")]
 			ulong electionId, 
-			[Description("Usernames of candidates you approve.")]
-			params string[] candidateNames
+			[Description("The candidates you approve. Either by their full username or their assigned letter.")]
+			params string[] approvals
 		) {
 			var guild = context.GetGuild();
-			var member = guild.Members[context.User.Id];
-			var voterStatus = _pollRepository.CanVote(guild.Id, electionId, member.Id);
+			var members = await guild.GetAllMembersAsync();
+			var voterStatus = _pollRepository.CanVote(guild.Id, electionId, context.User.Id);
 			switch (voterStatus) {
 				case VoteStatus.ElectionNotFound: {
 						await context.RespondAsync($"Could not find the election with ID `{electionId}`.");
@@ -106,11 +117,20 @@ namespace Gauss.Commands {
 						return;
 					}
 			}
+			if (approvals.Distinct().Count() != approvals.Count()){
+				await context.RespondAsync("You must not list any candidate more than once.");
+				return;
+			}
 
 			var election = _pollRepository.GetElection(guild.Id, electionId);
 			List<Candidate> candidates = new List<Candidate>();
-			foreach (var item in candidateNames) {
-				var foundCandidate = election.Candidates.Find(y => y.Username.ToLower() == item.ToLower());
+			foreach (var item in approvals) {
+				Candidate foundCandidate = null;
+				if (item.Length == 1){
+					foundCandidate = election.Candidates.Find(y => y.Option.ToLower() == item.ToLower());
+				}else{
+					foundCandidate = election.Candidates.Find(y => y.Username.ToLower() == item.ToLower());
+				}
 				if (foundCandidate == null) {
 					await context.RespondAsync($"Could not find `{item}` on the list of candidates.");
 					return;
