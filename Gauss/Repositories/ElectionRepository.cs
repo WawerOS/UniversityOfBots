@@ -43,6 +43,10 @@ namespace Gauss.Database {
 			}
 		}
 
+		public string GetAuditLogPath(Election election){
+			return Path.Join(this._configDirectory, "auditlogs", $"{election.GuildId}-{election.ID}.log");
+		}
+
 		public ElectionRepository(string configDirectory) {
 			this._configDirectory = configDirectory;
 			if (!Directory.Exists(Path.Join(this._configDirectory, "auditlogs"))) {

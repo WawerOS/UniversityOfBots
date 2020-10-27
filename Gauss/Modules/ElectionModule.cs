@@ -65,10 +65,12 @@ namespace Gauss.Modules {
 				} else {
 					if (election.End <= DateTime.UtcNow) {
 						if (_repository.CloseElection(election, this._client)){
-							var voteChannel = this._client
+							DSharpPlus.Entities.DiscordChannel voteChannel = this._client
 								.Guilds[election.GuildId]
 								.Channels[voteChannelId];
-							await voteChannel.SendMessageAsync(
+							
+							await voteChannel.SendFileAsync(
+								_repository.GetAuditLogPath(election),
 								$"Election #{election.ID} for {election.Title} has concluded. Results:\n{election.GetResults()}"
 							);
 						}
