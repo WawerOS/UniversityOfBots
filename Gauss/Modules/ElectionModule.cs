@@ -47,7 +47,6 @@ namespace Gauss.Modules {
 				return;
 			}
 
-			// TODO: This is not as threadsafe as I'd like it to be. I might have to move some of this into the repository.
 			foreach (var election in activeElections) {
 				var voteChannelId = this._config.GuildConfigs[election.GuildId].VoteChannel;
 				if (voteChannelId == 0){
@@ -61,22 +60,18 @@ namespace Gauss.Modules {
 							.Channels[voteChannelId];
 
 						var message = await voteChannel.SendMessageAsync(embed: election.GetEmbed());
-						election.Message = new Models.Elections.MessageReference() {
-							GuildId = election.GuildId,
-							ChannelId = message.ChannelId,
-							MessageId = message.Id,
-						};
+						this._repository.SetMessage(election.GuildId, election.ID, message);
 					}
 				} else {
 					if (election.End <= DateTime.UtcNow) {
-						election.Status = Models.Elections.ElectionStatus.Decided;
-						await election.Message.UpdateMessage(this._client, election.GetEmbed());
-						var voteChannel = this._client
-							.Guilds[election.GuildId]
-							.Channels[voteChannelId];
-						await voteChannel.SendMessageAsync(
-							$"Election #{election.ID} for {election.Title} has concluded. Results:\n{election.GetResults()}"
-						);
+						if (_repository.CloseElection(election, this._client)){
+							var voteChannel = this._client
+								.Guilds[election.GuildId]
+								.Channels[voteChannelId];
+							await voteChannel.SendMessageAsync(
+								$"Election #{election.ID} for {election.Title} has concluded. Results:\n{election.GetResults()}"
+							);
+						}
 					}
 				}
 			}
@@ -93,7 +88,7 @@ namespace Gauss.Modules {
 		private bool ShouldUpdateElections() {
 			// Run the main logic every 5 minutes:
 			if (this._nextCheck < DateTime.UtcNow) {
-				this._nextCheck = DateTime.UtcNow + TimeSpan.FromMinutes(5);
+				this._nextCheck = DateTime.UtcNow + TimeSpan.FromMinutes(1);
 				return true;
 			}
 			return false;

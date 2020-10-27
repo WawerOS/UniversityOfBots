@@ -22,8 +22,32 @@ namespace Gauss.Database {
 		private readonly Dictionary<ulong, List<Election>> _elections;
 		private readonly string _configDirectory;
 
+		private void WriteAuditLog(Election election, string action, bool includeJson = false) {
+
+			lock (_elections) {
+				string hash = null;
+				string json = null;
+				hash = election.GetHash();
+				json = JsonConvert.SerializeObject(election);
+				string logPath = Path.Join(this._configDirectory, "auditlogs", $"{election.GuildId}-{election.ID}.log");
+
+
+				var logText = $"[{DateTime.UtcNow:yyyy-MM-dd HH:mm}] [{action}] Hash: {hash}\n";
+				if (includeJson) {
+					logText += $"JSON: \n{json}\n\n";
+				}
+				File.AppendAllText(
+					logPath,
+					logText
+				);
+			}
+		}
+
 		public ElectionRepository(string configDirectory) {
 			this._configDirectory = configDirectory;
+			if (!Directory.Exists(Path.Join(this._configDirectory, "auditlogs"))) {
+				Directory.CreateDirectory(Path.Join(this._configDirectory, "auditlogs"));
+			}
 			try {
 				this._elections = JsonUtility.Deserialize<Dictionary<ulong, List<Election>>>(
 					Path.Join(this._configDirectory, "elections.json")
@@ -46,6 +70,18 @@ namespace Gauss.Database {
 			return results;
 		}
 
+		internal void SetMessage(ulong guildId, ulong electionId, DiscordMessage message) {
+			var election = GetElection(guildId, electionId);
+			this.WriteAuditLog(election, "Post election poll message");
+			lock(_elections){
+				election.Message = new MessageReference() {
+					GuildId = guildId,
+					ChannelId = message.ChannelId,
+					MessageId = message.Id,
+				};
+			}
+			this.WriteAuditLog(election, "Saved election poll message", true);
+		}
 
 		public ulong AddElection(ulong guildId, Election election) {
 			ulong nextId = 0;
@@ -82,6 +118,7 @@ namespace Gauss.Database {
 			lock (_elections) {
 				election.Status = ElectionStatus.Active;
 			}
+			this.WriteAuditLog(election, "Added election poll", true);
 			this.SaveChanges();
 			return true;
 		}
@@ -95,26 +132,6 @@ namespace Gauss.Database {
 				this._elections[guildId].Remove(election);
 			}
 			this.SaveChanges();
-		}
-
-		internal object AddCandidate(ulong guildId, ulong electionId, DiscordMember candidate) {
-			var election = this.GetElection(guildId, electionId);
-			if (election == null) {
-				return false;
-			}
-			lock (this._elections) {
-				if (!election.Candidates.Any(y => y.Username == candidate.Username)) {
-					election.Candidates.Add(
-						new Candidate() {
-							UserId = candidate.Id,
-							Username = candidate.Username,
-							Votes = 0
-						}
-					);
-				}
-			}
-			this.SaveChanges();
-			return true;
 		}
 
 		public VoteStatus CanVote(ulong guildId, ulong electionId, ulong userId) {
@@ -135,21 +152,6 @@ namespace Gauss.Database {
 			return VoteStatus.CanVote;
 		}
 
-		internal object RemoveCandidate(ulong guildId, ulong electionId, DiscordMember candidate) {
-			var election = this.GetElection(guildId, electionId);
-			if (election == null) {
-				return false;
-			}
-			lock (this._elections) {
-				var candidateEntry = election.Candidates.Find(y => y.Username == candidate.Username);
-				if (candidate != null) {
-					election.Candidates.Remove(candidateEntry);
-				}
-			}
-			this.SaveChanges();
-			return true;
-		}
-
 		public void SaveChanges() {
 			lock (this._elections) {
 				JsonUtility.Serialize(Path.Join(this._configDirectory, "elections.json"), this._elections);
@@ -158,6 +160,7 @@ namespace Gauss.Database {
 
 		public (string, string) SaveVotes(ulong guildId, ulong electionId, ulong voterId, List<Candidate> candidates, DiscordClient client) {
 			var election = this.GetElection(guildId, electionId);
+			this.WriteAuditLog(election, "Add vote - before");
 			var hashBefore = election.GetHash();
 			var hashAfter = hashBefore;
 			if (!election.Voters.Contains(voterId)) {
@@ -171,7 +174,25 @@ namespace Gauss.Database {
 				this.SaveChanges();
 				_ = election.Message.UpdateMessage(client, election.GetEmbed());
 			}
+			this.WriteAuditLog(election, "Add vote - after");
 			return (hashBefore, hashAfter);
+		}
+
+		public bool CloseElection(Election election, DiscordClient client = null) {
+			if (election.End >= DateTime.UtcNow) {
+				return false;
+			}
+			this.WriteAuditLog(election, "Close election - before");
+			lock (this._elections) {
+				election.Status = ElectionStatus.Decided;
+				if (client != null) {
+					_ = election.Message.UpdateMessage(client, election.GetEmbed());
+				}
+			}
+			this.SaveChanges();
+
+			this.WriteAuditLog(election, "Close election- after", true);
+			return true;
 		}
 	}
 }
