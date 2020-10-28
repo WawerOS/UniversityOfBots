@@ -6,7 +6,6 @@
 
 - [election create](#election-create)
 - [election vote](#election-vote)
-
 ---
 
 ### election create
@@ -77,7 +76,7 @@ For more details on how approval voting works, see this [wikipedia article](http
 
 **Examples**:
 - `!g election 1 B C` - Approve candidates "A" and "B" for the election with ID 1.
-- `!g election 1 Gauss#4817 "Max Mustermann#1234` - approve candidates "Gauss" and "Max Mustermann" for election #1.
+- `!g election 1 Gauss#4817 "Max Mustermann#1234"` - approve candidates "Gauss" and "Max Mustermann" for election #1.
 
 **Two step process**:
 

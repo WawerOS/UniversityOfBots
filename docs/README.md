@@ -25,6 +25,10 @@ You can send anonymous messages through Gauss with the `send` command.
 
 You can access moderation options through various `admin` commands.
 
+### [election](./election/README.md)
+
+Creating and voting in elections.
+
 ### [Miscellaneous commands](./misc/README.md)
 
 Other commands that don't fit neatly into their own grouping.
