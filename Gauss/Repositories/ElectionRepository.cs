@@ -74,7 +74,6 @@ namespace Gauss.Database {
 			return results;
 		}
 
-
 		public List<Election> GetCurrentElections(ulong guildId) {
 			var results = new List<Election>();
 			lock (this._elections) {
@@ -83,7 +82,7 @@ namespace Gauss.Database {
 						if (y.GuildId != guildId) {
 							return false;
 						}
-						return y.Status == ElectionStatus.Active && y.Start > DateTime.UtcNow;
+						return y.Status == ElectionStatus.Active && y.Start <= DateTime.UtcNow && y.End >= DateTime.UtcNow;
 					})) {
 						results.Add(election);
 					}
