@@ -15,7 +15,7 @@ using Newtonsoft.Json;
 namespace Gauss.Models.Elections {
 	public class Election {
 		public ulong GuildId { get; set; }
-		
+
 		public ulong ID { get; set; }
 
 		/// <summary>
@@ -86,18 +86,18 @@ namespace Gauss.Models.Elections {
 				this.Candidates.Select((y) => $"{y.Option}) {y.Username}")
 			);
 			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
-				Title = $"Election for {this.Title}",
+				Title = $"Election for {this.Title} (ID: {this.ID})",
 				Color = DiscordColor.Blurple,
 				Timestamp = this.End,
 			};
 
-			if (this.Status != ElectionStatus.Decided){
+			if (this.Status != ElectionStatus.Decided) {
 				embedBuilder.Description = this.Description + "\n" +
 					$"**Start:** {this.Start:yyyy-MM-dd HH:mm} UTC\n" +
 					$"**End:** {this.End:yyyy-MM-dd HH:mm} UTC\n" +
 					$"**Candidates:**\n{optionsText}\n\n" +
-					$"Vote via `!g election vote {this.ID} <username> [<username> ...]`";
-			}else{
+					$"Vote via `!g election vote {this.ID} username [username ...]`";
+			} else {
 				embedBuilder.Description = this.Description + "\n" +
 					$"**Period:** {this.Start:yyyy-MM-dd HH:mm} - {this.End:yyyy-MM-dd HH:mm} UTC\n" +
 					$"**Results:**\n{this.GetResults()}";

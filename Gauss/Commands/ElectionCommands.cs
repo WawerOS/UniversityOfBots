@@ -19,7 +19,7 @@ using DSharpPlus.Entities;
 namespace Gauss.Commands {
 	[Group("election")]
 	[Description("Commands to participate in elections")]
-	[RequireGuild]
+	[NeedsGuild]
 	[CheckDisabled]
 	public class ElectionCommands : BaseCommandModule {
 		private readonly ElectionRepository _pollRepository;
@@ -42,26 +42,26 @@ namespace Gauss.Commands {
 			[Description("List of candidates.")]
 			params DiscordUser[] candidateNames
 		) {
-			if (start <= DateTime.UtcNow){
+			if (start <= DateTime.UtcNow) {
 				await context.RespondAsync($"`start` must not be in the past.");
 				return;
 			}
-			if (start > end){
+			if (start > end) {
 				await context.RespondAsync($"`start` must be before `end`.");
 				return;
 			}
-			if (candidateNames.Distinct().Count() != candidateNames.Count()){
+			if (candidateNames.Distinct().Count() != candidateNames.Count()) {
 				await context.RespondAsync("You have duplicate names in the candidate list.");
 				return;
 			}
-			
+
 			var guild = context.GetGuild();
 
 			List<Candidate> candidates = new List<Candidate>();
-			candidates = candidateNames.Select((item, index) => new Candidate{
-				Option = char.ConvertFromUtf32(65+index),
-				UserId = item.Id, 
-				Username = item.Username + "#" + item.Discriminator, 
+			candidates = candidateNames.Select((item, index) => new Candidate {
+				Option = char.ConvertFromUtf32(65 + index),
+				UserId = item.Id,
+				Username = item.Username + "#" + item.Discriminator,
 				Votes = 0,
 			}).ToList();
 			var election = new Election() {
@@ -90,9 +90,9 @@ namespace Gauss.Commands {
 		[Command("vote")]
 		[Description("Vote for one or more candidates. The voting system is approval voting.")]
 		public async Task VoteFor(
-			CommandContext context, 
+			CommandContext context,
 			[Description("ID of the election you want to vote in")]
-			ulong electionId, 
+			ulong electionId,
 			[Description("The candidates you approve. Either by their full username or their assigned letter.")]
 			params string[] approvals
 		) {
@@ -101,7 +101,15 @@ namespace Gauss.Commands {
 			var voterStatus = _pollRepository.CanVote(guild.Id, electionId, context.User.Id);
 			switch (voterStatus) {
 				case VoteStatus.ElectionNotFound: {
-						await context.RespondAsync($"Could not find the election with ID `{electionId}`.");
+						var activeElections = _pollRepository.GetCurrentElections(guild.Id);
+						if (activeElections.Count > 0) {
+							await context.RespondAsync(
+								$"No election with ID `{electionId}`. Current elections: " +
+								string.Join(", ", activeElections.Select(y => $"**{y.Title}** (ID: {y.ID})"))
+							);
+						} else {
+							await context.RespondAsync($"There are currently no elections to vote in.");
+						}
 						return;
 					}
 				case VoteStatus.ElectionNotStarted: {
@@ -117,7 +125,7 @@ namespace Gauss.Commands {
 						return;
 					}
 			}
-			if (approvals.Distinct().Count() != approvals.Count()){
+			if (approvals.Distinct().Count() != approvals.Count()) {
 				await context.RespondAsync("You must not list any candidate more than once.");
 				return;
 			}
@@ -126,9 +134,9 @@ namespace Gauss.Commands {
 			List<Candidate> candidates = new List<Candidate>();
 			foreach (var item in approvals) {
 				Candidate foundCandidate = null;
-				if (item.Length == 1){
+				if (item.Length == 1) {
 					foundCandidate = election.Candidates.Find(y => y.Option.ToLower() == item.ToLower());
-				}else{
+				} else {
 					foundCandidate = election.Candidates.Find(y => y.Username.ToLower() == item.ToLower());
 				}
 				if (foundCandidate == null) {
@@ -147,10 +155,8 @@ namespace Gauss.Commands {
 				confirmationMessage,
 				async () => {
 					var (hashBefore, hashafter) = _pollRepository.SaveVotes(guild.Id, election.ID, context.User.Id, candidates, context.Client);
-					await guild.Channels[637646862798553108].SendMessageAsync(
-						$"A user cast a their vote for election #{electionId}.\nHash before: {hashBefore}\nHash after: {hashafter}"
-					);
-					await context.RespondAsync("Your vote has been cast.");
+					await context.RespondAsync("Your vote has been cast. These hashes can be used to check the audit log after the election is over: \n"
+						+ $"Hash before: {hashBefore}\nHash after: {hashafter}");
 				}
 			);
 		}

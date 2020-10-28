@@ -43,7 +43,7 @@ namespace Gauss.Database {
 			}
 		}
 
-		public string GetAuditLogPath(Election election){
+		public string GetAuditLogPath(Election election) {
 			return Path.Join(this._configDirectory, "auditlogs", $"{election.GuildId}-{election.ID}.log");
 		}
 
@@ -74,10 +74,29 @@ namespace Gauss.Database {
 			return results;
 		}
 
+
+		public List<Election> GetCurrentElections(ulong guildId) {
+			var results = new List<Election>();
+			lock (this._elections) {
+				foreach (var electionsList in this._elections.Values) {
+					foreach (var election in electionsList.Where(y => {
+						if (y.GuildId != guildId) {
+							return false;
+						}
+						return y.Status == ElectionStatus.Active && y.Start > DateTime.UtcNow;
+					})) {
+						results.Add(election);
+					}
+				}
+			}
+
+			return results;
+		}
+
 		internal void SetMessage(ulong guildId, ulong electionId, DiscordMessage message) {
 			var election = GetElection(guildId, electionId);
 			this.WriteAuditLog(election, "Post election poll message");
-			lock(_elections){
+			lock (_elections) {
 				election.Message = new MessageReference() {
 					GuildId = guildId,
 					ChannelId = message.ChannelId,
