@@ -41,7 +41,7 @@ namespace Gauss.Converters
         Task<Optional<DateTime>> IArgumentConverter<DateTime>.ConvertAsync(string value, CommandContext context)
         {
             if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var result))
-                return Task.FromResult(new Optional<DateTime>(result));
+                return Task.FromResult(new Optional<DateTime>(result.ToUniversalTime()));
 
             return Task.FromResult(Optional.FromNoValue<DateTime>());
         }

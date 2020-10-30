@@ -17,7 +17,6 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
-using Emzi0767.Utilities;
 using Gauss.CommandAttributes;
 using Gauss.Commands;
 using Gauss.Converters;
@@ -67,6 +66,7 @@ namespace Gauss {
 			var commandServices = new ServiceCollection()
 				.AddDbContext<UserSettingsContext>(ServiceLifetime.Singleton)
 				.AddDbContext<GuildSettingsContext>(ServiceLifetime.Singleton)
+				.AddSingleton(new ReminderRepository(config.ConfigDirectory))
 				.AddSingleton(new ElectionRepository(config.ConfigDirectory))
 				.AddSingleton(this._scheduler)
 				.AddSingleton(this._config)
@@ -96,6 +96,7 @@ namespace Gauss {
 			this._commands.RegisterCommands<MiscCommands>();
 			this._commands.RegisterCommands<FoldingCommands>();
 			this._commands.RegisterCommands<ElectionCommands>();
+			this._commands.RegisterCommands<RemindMeCommands>();
 			this.RegisterModules(Assembly.GetExecutingAssembly(), commandServices);
 
 			this._commands.CommandErrored += this.Commands_CommandErrored;
