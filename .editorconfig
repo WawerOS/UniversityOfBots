@@ -1,4 +1,6 @@
-[*.{cs}]
+[*.cs]
+indent_size = 4
+indent_style = tab
 # name all constant fields using UpperCase
 dotnet_naming_rule.constant_fields_should_be_upper_case.severity = warning
 dotnet_naming_rule.constant_fields_should_be_upper_case.symbols  = constant_fields

@@ -22,6 +22,9 @@ namespace Gauss.Models {
 
 		[JsonProperty("welcome_channel")]
 		public ulong WelcomeChannel { get; set; }
+
+		[JsonProperty("vote_channel")]
+		public ulong VoteChannel { get; set; }
 	}
 
 	public class GaussConfig {
@@ -64,7 +67,6 @@ namespace Gauss.Models {
 			}
 
 			var config = JsonUtility.Deserialize<GaussConfig>(Path.Join(configDirectory, "config.json"));
-
 			config.ConfigDirectory = configDirectory;
 			return config;
 		}
