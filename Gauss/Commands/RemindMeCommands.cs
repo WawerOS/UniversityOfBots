@@ -50,7 +50,7 @@ namespace Gauss.Commands {
 		[Command("now")]
 		[Description("Get the current time in a given timezone.")]
 		public async Task ConvertTime(CommandContext context, string timezoneName) {
-			var timezone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezoneName);
+			var timezone = TimezoneHelper.Find(timezoneName);
 			if (timezone == null) {
 				return;
 			}
@@ -85,7 +85,7 @@ namespace Gauss.Commands {
 
 		[Command("converttime")]
 		public async Task ConvertTime(CommandContext context, DateTime datetime, string timezoneName) {
-			var timezone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezoneName);
+			var timezone = TimezoneHelper.Find(timezoneName);
 			if (timezone == null) {
 				return;
 			}
@@ -116,7 +116,7 @@ namespace Gauss.Commands {
 
 		[Command("settimezone")]
 		public async Task SetUserTimezone(CommandContext context, string timezoneName) {
-			var timezone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezoneName);
+			var timezone = TimezoneHelper.Find(timezoneName);
 			if (timezone != null) {
 				var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
 				this._repository.SetUserTimezone(context.User.Id, timezone);

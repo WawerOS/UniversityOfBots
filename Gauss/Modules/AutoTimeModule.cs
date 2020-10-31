@@ -11,6 +11,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Gauss.Database;
+using Gauss.Utilities;
 using NodaTime;
 
 namespace Gauss.Modules {
@@ -46,7 +47,7 @@ namespace Gauss.Modules {
 
 					DateTimeZone timezone = null;
 					if (!string.IsNullOrEmpty(timezoneRaw)) {
-						timezone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezoneRaw.Trim());
+						timezone = TimezoneHelper.Find(timezoneRaw.Trim());
 					} else {
 						timezone = this._repository.GetUserTimezone(e.Message.Author.Id);
 						if (timezone.Id == "UTC") {
