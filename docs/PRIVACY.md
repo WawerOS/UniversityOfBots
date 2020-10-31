@@ -18,7 +18,17 @@ Logs are regularly deleted, if they are no longer needed.
 
 If you use a command to adjust some settings, like `send blockDMs`, the bot will save your discord user ID along with the specified settings.
 
-## Messages and command usage.
+2. Elections
+
+For elections, the bot will store your user ID and tally your votes. But it does not store who you voted for in detail. Only the vote totals for each candidate is stored, alongside a list of who voted.
+
+3. Reminders
+
+For reminders, the bot will store your user ID, the desired time of the reminder and the associated message.
+
+If you set your timezone via `!g settimezone`, the bot will also store that.
+
+## Messages and command usage
 
 Gauss will not keep any record of messages send to it via DMs or in channels it has access to.
 The usage of commands is not logged or kept track of in any way.

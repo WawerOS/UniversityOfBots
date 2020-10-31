@@ -51,8 +51,9 @@ namespace Gauss.Commands {
 						this._userTimezones.Add(context.User.Id, timezone);
 					}
 				}
-				
 				await context.RespondAsync($"Saved {timezone.Id}: {timezone.GetUtcOffset(now).ToTimeSpan()}");
+			}else{
+				await context.RespondAsync("Use a timezone from this list: <https://en.wikipedia.org/wiki/List_of_tz_database_time_zones>");
 			}
 			return;
 		}
@@ -79,13 +80,14 @@ namespace Gauss.Commands {
 		[Command("remindme")]
 		public async Task SetReminder(CommandContext context, string day, DateTime time, [RemainingText] string message = "") {
 			ZonedDateTime zonedDateTime;
+			var timezone = this.GetUserTimezone(context.User.Id);
+			var today = Instant.FromDateTimeUtc(DateTime.UtcNow).InZone(timezone);
+			zonedDateTime = (today.Date.ToDateTimeUnspecified() + time.TimeOfDay).InTimeZone(this.GetUserTimezone(context.User.Id));
 			switch(day){
 				case "today": {
-					zonedDateTime = time.InTimeZone(this.GetUserTimezone(context.User.Id));
 					break;
 				}
 				case "tomorrow":{
-					zonedDateTime = time.InTimeZone(this.GetUserTimezone(context.User.Id));
 					zonedDateTime = zonedDateTime.PlusHours(24);
 					break;
 				}	
