@@ -10,11 +10,34 @@ using System.IO;
 using System.Linq;
 using Gauss.Utilities;
 using Gauss.Models;
+using NodaTime;
 
 namespace Gauss.Database {
 	public class ReminderRepository {
 		private readonly List<Reminder> _reminders;
+		private readonly Dictionary<ulong, DateTimeZone> _userTimezones = new Dictionary<ulong, DateTimeZone>();
 		private readonly string _configDirectory;
+
+		public  DateTimeZone GetUserTimezone(ulong userId){
+			DateTimeZone result;
+			lock (_userTimezones) {
+				this._userTimezones.TryGetValue(userId, out result);
+			}
+			if (result == null) {
+				result = DateTimeZone.Utc;
+			}
+			return result;
+		}
+
+		public void SetUserTimezone(ulong userId, DateTimeZone timezone){
+			lock (_userTimezones) {
+				if (this._userTimezones.ContainsKey(userId)) {
+					this._userTimezones[userId] = timezone;
+				} else {
+					this._userTimezones.Add(userId, timezone);
+				}
+			}
+		}
 
 		public ReminderRepository(string configDirectory) {		
 			this._configDirectory = configDirectory;
@@ -24,6 +47,13 @@ namespace Gauss.Database {
 				);
 			} catch (Exception) {
 				this._reminders = new List<Reminder>();
+			}
+			try {
+				this._userTimezones = JsonUtility.Deserialize<Dictionary<ulong, DateTimeZone>>(
+					Path.Join(this._configDirectory, "usertimezones.json")
+				);
+			} catch (Exception) {
+				this._userTimezones = new Dictionary<ulong, DateTimeZone>();
 			}
 		}
 

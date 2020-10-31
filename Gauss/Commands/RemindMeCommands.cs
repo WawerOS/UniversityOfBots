@@ -5,11 +5,10 @@
 **/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
 using Gauss.CommandAttributes;
 using Gauss.Database;
 using Gauss.Models;
@@ -20,23 +19,99 @@ namespace Gauss.Commands {
 	[NotBot]
 	[CheckDisabled]
 	public class RemindMeCommands : BaseCommandModule {
-		private readonly Dictionary<ulong, DateTimeZone> _userTimezones = new Dictionary<ulong, DateTimeZone>();
+		
 		private readonly ReminderRepository _repository;
 	
 		public RemindMeCommands(ReminderRepository repository){
 			this._repository = repository;
 		}
 
+		[Command("now")]
+		[Description("Get the current time in your configured timezone (or UTC).")]
+		public async Task ConvertTime(CommandContext context) {
+			var timezone = this._repository.GetUserTimezone(context.User.Id);
+			if (timezone == null){
+				return;
+			}
 
-		private DateTimeZone GetUserTimezone(ulong userId){
-			DateTimeZone result;
-			lock (_userTimezones) {
-				this._userTimezones.TryGetValue(userId, out result);
+			var zonedDateTime = Instant.FromDateTimeUtc(DateTime.UtcNow).InZone(timezone);
+			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
+				Color = DiscordColor.None,
+				Footer = new DiscordEmbedBuilder.EmbedFooter() {
+				 	Text = $"Current time: {zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id}"
+				},
+				Timestamp = zonedDateTime.ToDateTimeUtc(),
+			};
+
+			await context.RespondAsync(embed: embedBuilder.Build());
+		}
+
+
+		[Command("now")]
+		[Description("Get the current time in a given timezone.")]
+		public async Task ConvertTime(CommandContext context, string timezoneName) {
+			var timezone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezoneName);
+			if (timezone == null){
+				return;
 			}
-			if (result == null) {
-				result = DateTimeZone.Utc;
+
+			var zonedDateTime = Instant.FromDateTimeUtc(DateTime.UtcNow).InZone(timezone);
+			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
+				Color = DiscordColor.None,
+				Footer = new DiscordEmbedBuilder.EmbedFooter() {
+				 	Text = $"Current time: {zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id}"
+				},
+				Timestamp = zonedDateTime.ToDateTimeUtc(),
+			};
+
+			await context.RespondAsync(embed: embedBuilder.Build());
+		}
+
+
+		[Command("converttime")]
+		public async Task ConvertTime(CommandContext context, DateTime datetime) {
+			var timezone = this._repository.GetUserTimezone(context.User.Id);
+			var zonedDateTime = datetime.InTimeZone(timezone);
+			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
+				Color = DiscordColor.None,
+				Footer = new DiscordEmbedBuilder.EmbedFooter() {
+				 	Text = $"{zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id} in your local time: "
+				},
+				Timestamp = zonedDateTime.ToDateTimeUtc(),
+			};
+
+			await context.RespondAsync(embed: embedBuilder.Build());
+		}
+
+		[Command("converttime")]
+		public async Task ConvertTime(CommandContext context, DateTime datetime, string timezoneName) {
+			var timezone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezoneName);
+			if (timezone == null){
+				return;
 			}
-			return result;
+
+			var zonedDateTime = datetime.InTimeZone(timezone);
+			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
+				Color = DiscordColor.None,
+				Footer = new DiscordEmbedBuilder.EmbedFooter() {
+				 	Text = $"{zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id} in your local time: "
+				},
+				Timestamp = zonedDateTime.ToDateTimeUtc(),
+			};
+
+			await context.RespondAsync(embed: embedBuilder.Build());
+		}
+
+		[Command("converttime")]
+		public async Task ConvertTime(CommandContext context, DateTime date, DateTime time) {
+			var datetime = date.Date + time.TimeOfDay;
+			await this.ConvertTime(context, datetime);
+		}
+
+		[Command("converttime")]
+		public async Task ConvertTime(CommandContext context, DateTime date, DateTime time, string timezoneName) {
+			var datetime = date.Date + time.TimeOfDay;
+			await this.ConvertTime(context, datetime, timezoneName);
 		}
 
 		[Command("settimezone")]
@@ -44,13 +119,7 @@ namespace Gauss.Commands {
 			var timezone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezoneName);
 			if (timezone != null) {
 				var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
-				lock (_userTimezones) {
-					if (this._userTimezones.ContainsKey(context.User.Id)) {
-						this._userTimezones[context.User.Id] = timezone;
-					} else {
-						this._userTimezones.Add(context.User.Id, timezone);
-					}
-				}
+				this._repository.SetUserTimezone(context.User.Id, timezone);
 				await context.RespondAsync($"Saved {timezone.Id}: {timezone.GetUtcOffset(now).ToTimeSpan()}");
 			}else{
 				await context.RespondAsync("Use a timezone from this list: <https://en.wikipedia.org/wiki/List_of_tz_database_time_zones>");
@@ -60,7 +129,7 @@ namespace Gauss.Commands {
 
 		[Command("remindme")]
 		public async Task SetReminder(CommandContext context, DateTime datetime, [RemainingText] string message = "") {
-			var zonedDateTime = datetime.InTimeZone(this.GetUserTimezone(context.User.Id));
+			var zonedDateTime = datetime.InTimeZone(this._repository.GetUserTimezone(context.User.Id));
 			Reminder reminder = new Reminder(zonedDateTime, message, context.User.Id);
 			this._repository.AddReminder(reminder);
 			await context.RespondAsync(embed: reminder.CreateEmbed());
@@ -70,7 +139,7 @@ namespace Gauss.Commands {
 		[Command("remindme")]
 		public async Task SetReminder(CommandContext context, DateTime date, DateTime time, [RemainingText] string message = "") {
 			var datetime = date.Date + time.TimeOfDay;
-			var zonedDateTime = datetime.InTimeZone(this.GetUserTimezone(context.User.Id));
+			var zonedDateTime = datetime.InTimeZone(this._repository.GetUserTimezone(context.User.Id));
 			Reminder reminder = new Reminder(zonedDateTime, message, context.User.Id);
 			this._repository.AddReminder(reminder);
 			await context.RespondAsync(embed: reminder.CreateEmbed());
@@ -80,9 +149,9 @@ namespace Gauss.Commands {
 		[Command("remindme")]
 		public async Task SetReminder(CommandContext context, string day, DateTime time, [RemainingText] string message = "") {
 			ZonedDateTime zonedDateTime;
-			var timezone = this.GetUserTimezone(context.User.Id);
+			var timezone = this._repository.GetUserTimezone(context.User.Id);
 			var today = Instant.FromDateTimeUtc(DateTime.UtcNow).InZone(timezone);
-			zonedDateTime = (today.Date.ToDateTimeUnspecified() + time.TimeOfDay).InTimeZone(this.GetUserTimezone(context.User.Id));
+			zonedDateTime = (today.Date.ToDateTimeUnspecified() + time.TimeOfDay).InTimeZone(timezone);
 			switch(day){
 				case "today": {
 					break;
