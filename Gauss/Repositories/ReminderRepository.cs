@@ -98,7 +98,7 @@ namespace Gauss.Database {
 			lock (this._reminders) {
 				JsonUtility.Serialize(
 					Path.Join(this._configDirectory, "usertimezones.json"),
-					this._reminders
+					this._userTimezones
 				);
 			}
 		}
