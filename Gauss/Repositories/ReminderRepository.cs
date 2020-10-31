@@ -18,7 +18,7 @@ namespace Gauss.Database {
 		private readonly Dictionary<ulong, DateTimeZone> _userTimezones = new Dictionary<ulong, DateTimeZone>();
 		private readonly string _configDirectory;
 
-		public  DateTimeZone GetUserTimezone(ulong userId){
+		public DateTimeZone GetUserTimezone(ulong userId) {
 			DateTimeZone result;
 			lock (_userTimezones) {
 				this._userTimezones.TryGetValue(userId, out result);
@@ -29,7 +29,7 @@ namespace Gauss.Database {
 			return result;
 		}
 
-		public void SetUserTimezone(ulong userId, DateTimeZone timezone){
+		public void SetUserTimezone(ulong userId, DateTimeZone timezone) {
 			lock (_userTimezones) {
 				if (this._userTimezones.ContainsKey(userId)) {
 					this._userTimezones[userId] = timezone;
@@ -37,9 +37,10 @@ namespace Gauss.Database {
 					this._userTimezones.Add(userId, timezone);
 				}
 			}
+			this.SaveTimezones();
 		}
 
-		public ReminderRepository(string configDirectory) {		
+		public ReminderRepository(string configDirectory) {
 			this._configDirectory = configDirectory;
 			try {
 				this._reminders = JsonUtility.Deserialize<List<Reminder>>(
@@ -57,8 +58,8 @@ namespace Gauss.Database {
 			}
 		}
 
-		public void AddReminder(Reminder newReminder){
-			lock(_reminders){
+		public void AddReminder(Reminder newReminder) {
+			lock (_reminders) {
 				var newId = this._reminders.Count > 0
 					? this._reminders.Select(y => y.ID).Max() + 1
 					: 1;
@@ -68,10 +69,10 @@ namespace Gauss.Database {
 			this.SaveChanges();
 		}
 
-		public bool RemoveReminder(ulong userId, ulong reminderId){
-			lock(_reminders){
+		public bool RemoveReminder(ulong userId, ulong reminderId) {
+			lock (_reminders) {
 				var reminder = this._reminders.Find(y => y.UserId == userId && y.ID == reminderId);
-				if (reminder != null){
+				if (reminder != null) {
 					this._reminders.Remove(reminder);
 					return true;
 				}
@@ -79,7 +80,7 @@ namespace Gauss.Database {
 			return false;
 		}
 
-		public List<Reminder> GetReminders(){
+		public List<Reminder> GetReminders() {
 			return this._reminders;
 		}
 
@@ -87,7 +88,16 @@ namespace Gauss.Database {
 		public void SaveChanges() {
 			lock (this._reminders) {
 				JsonUtility.Serialize(
-					Path.Join(this._configDirectory, "reminders.json"), 
+					Path.Join(this._configDirectory, "reminders.json"),
+					this._reminders
+				);
+			}
+		}
+
+		public void SaveTimezones() {
+			lock (this._reminders) {
+				JsonUtility.Serialize(
+					Path.Join(this._configDirectory, "usertimezones.json"),
 					this._reminders
 				);
 			}

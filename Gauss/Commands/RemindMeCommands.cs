@@ -19,10 +19,10 @@ namespace Gauss.Commands {
 	[NotBot]
 	[CheckDisabled]
 	public class RemindMeCommands : BaseCommandModule {
-		
+
 		private readonly ReminderRepository _repository;
-	
-		public RemindMeCommands(ReminderRepository repository){
+
+		public RemindMeCommands(ReminderRepository repository) {
 			this._repository = repository;
 		}
 
@@ -30,7 +30,7 @@ namespace Gauss.Commands {
 		[Description("Get the current time in your configured timezone (or UTC).")]
 		public async Task ConvertTime(CommandContext context) {
 			var timezone = this._repository.GetUserTimezone(context.User.Id);
-			if (timezone == null){
+			if (timezone == null) {
 				return;
 			}
 
@@ -38,7 +38,7 @@ namespace Gauss.Commands {
 			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
 				Color = DiscordColor.None,
 				Footer = new DiscordEmbedBuilder.EmbedFooter() {
-				 	Text = $"Current time: {zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id}"
+					Text = $"Current time: {zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id}"
 				},
 				Timestamp = zonedDateTime.ToDateTimeUtc(),
 			};
@@ -51,7 +51,7 @@ namespace Gauss.Commands {
 		[Description("Get the current time in a given timezone.")]
 		public async Task ConvertTime(CommandContext context, string timezoneName) {
 			var timezone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezoneName);
-			if (timezone == null){
+			if (timezone == null) {
 				return;
 			}
 
@@ -59,7 +59,7 @@ namespace Gauss.Commands {
 			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
 				Color = DiscordColor.None,
 				Footer = new DiscordEmbedBuilder.EmbedFooter() {
-				 	Text = $"Current time: {zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id}"
+					Text = $"Current time: {zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id}"
 				},
 				Timestamp = zonedDateTime.ToDateTimeUtc(),
 			};
@@ -75,7 +75,7 @@ namespace Gauss.Commands {
 			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
 				Color = DiscordColor.None,
 				Footer = new DiscordEmbedBuilder.EmbedFooter() {
-				 	Text = $"{zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id} in your local time: "
+					Text = $"{zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id} in your local time: "
 				},
 				Timestamp = zonedDateTime.ToDateTimeUtc(),
 			};
@@ -86,7 +86,7 @@ namespace Gauss.Commands {
 		[Command("converttime")]
 		public async Task ConvertTime(CommandContext context, DateTime datetime, string timezoneName) {
 			var timezone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezoneName);
-			if (timezone == null){
+			if (timezone == null) {
 				return;
 			}
 
@@ -94,7 +94,7 @@ namespace Gauss.Commands {
 			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
 				Color = DiscordColor.None,
 				Footer = new DiscordEmbedBuilder.EmbedFooter() {
-				 	Text = $"{zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id} in your local time: "
+					Text = $"{zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id} in your local time: "
 				},
 				Timestamp = zonedDateTime.ToDateTimeUtc(),
 			};
@@ -121,7 +121,7 @@ namespace Gauss.Commands {
 				var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
 				this._repository.SetUserTimezone(context.User.Id, timezone);
 				await context.RespondAsync($"Saved {timezone.Id}: {timezone.GetUtcOffset(now).ToTimeSpan()}");
-			}else{
+			} else {
 				await context.RespondAsync("Use a timezone from this list: <https://en.wikipedia.org/wiki/List_of_tz_database_time_zones>");
 			}
 			return;
@@ -152,18 +152,18 @@ namespace Gauss.Commands {
 			var timezone = this._repository.GetUserTimezone(context.User.Id);
 			var today = Instant.FromDateTimeUtc(DateTime.UtcNow).InZone(timezone);
 			zonedDateTime = (today.Date.ToDateTimeUnspecified() + time.TimeOfDay).InTimeZone(timezone);
-			switch(day){
+			switch (day) {
 				case "today": {
-					break;
-				}
-				case "tomorrow":{
-					zonedDateTime = zonedDateTime.PlusHours(24);
-					break;
-				}	
+						break;
+					}
+				case "tomorrow": {
+						zonedDateTime = zonedDateTime.PlusHours(24);
+						break;
+					}
 				default: {
-					await context.RespondAsync($"'{day}' not supported. Only 'today' or 'tomorrow'");
-					return;
-				}
+						await context.RespondAsync($"'{day}' not supported. Only 'today' or 'tomorrow'");
+						return;
+					}
 			}
 			Reminder reminder = new Reminder(zonedDateTime, message, context.User.Id);
 			this._repository.AddReminder(reminder);
@@ -171,10 +171,10 @@ namespace Gauss.Commands {
 			return;
 		}
 
-		
+
 		[Command("remindme")]
 		public async Task SetReminder(CommandContext context, int time, string unit, [RemainingText] string message = "") {
-			if (time < 0){
+			if (time < 0) {
 				await context.RespondAsync("Reminder can't be set for the past.");
 				return;
 			}
@@ -216,7 +216,7 @@ namespace Gauss.Commands {
 						return;
 					}
 			}
-			if (dueAt > DateTime.UtcNow.AddYears(5) ){
+			if (dueAt > DateTime.UtcNow.AddYears(5)) {
 				await context.RespondAsync("Reminders set more than 5 years in the future are not supported");
 				return;
 			}
