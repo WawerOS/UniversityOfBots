@@ -55,9 +55,8 @@ namespace Gauss.Modules {
 						// Nothing to do.
 					}
 				}
-				this._repository.RemoveReminder(reminder.UserId, reminder.ID);
+				this._repository.RemoveReminder(reminder);
 			}
-			this._repository.SaveChanges();
 			return;
 		}
 

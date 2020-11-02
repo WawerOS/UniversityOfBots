@@ -58,6 +58,15 @@ namespace Gauss.Database {
 			}
 		}
 
+		public void RemoveReminder(Reminder reminder) {
+			lock (_reminders) {
+				if (this._reminders.Contains(reminder)) {
+					this._reminders.Remove(reminder);
+					this.SaveChanges();
+				}
+			}
+		}
+
 		public void AddReminder(Reminder newReminder) {
 			lock (_reminders) {
 				var newId = this._reminders.Count > 0
@@ -65,8 +74,8 @@ namespace Gauss.Database {
 					: 1;
 				newReminder.ID = newId;
 				this._reminders.Add(newReminder);
+				this.SaveChanges();
 			}
-			this.SaveChanges();
 		}
 
 		public bool RemoveReminder(ulong userId, ulong reminderId) {
@@ -74,6 +83,7 @@ namespace Gauss.Database {
 				var reminder = this._reminders.Find(y => y.UserId == userId && y.ID == reminderId);
 				if (reminder != null) {
 					this._reminders.Remove(reminder);
+					this.SaveChanges();
 					return true;
 				}
 			}
@@ -84,14 +94,11 @@ namespace Gauss.Database {
 			return this._reminders;
 		}
 
-
-		public void SaveChanges() {
-			lock (this._reminders) {
-				JsonUtility.Serialize(
-					Path.Join(this._configDirectory, "reminders.json"),
-					this._reminders
-				);
-			}
+		private void SaveChanges() {
+			JsonUtility.Serialize(
+				Path.Join(this._configDirectory, "reminders.json"),
+				this._reminders
+			);
 		}
 
 		public void SaveTimezones() {
