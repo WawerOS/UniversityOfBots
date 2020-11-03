@@ -50,7 +50,7 @@ namespace Gauss.Modules {
 			foreach (var election in activeElections) {
 				var voteChannelId = this._config.GuildConfigs[election.GuildId].VoteChannel;
 				if (voteChannelId == 0){
-					this._client.Logger.LogError("No vote channel specified.");
+					this._client.Logger.LogError("Posting election failed: No vote channel specified.");
 					break;
 				}
 				if (election.Message == null) {

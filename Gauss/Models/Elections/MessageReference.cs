@@ -42,25 +42,25 @@ namespace Gauss.Models.Elections {
 		public async Task UpdateMessage(DiscordClient client, DiscordEmbed newEmbed) {
 			// This might be overly defensive and verbose logging, but I plan to use this for more features, and having it robost makes that easier.
 			if (!client.Guilds.ContainsKey(this.GuildId)){
-				client.Logger.LogError("Could not modify message - guild not found.");
+				client.Logger.LogError(LogEvent.UpdateMessage, "Could not modify message - guild not found.");
 				return;
 			}
 			var guild = client.Guilds[this.GuildId];
 			if (!guild.Channels.ContainsKey(this.ChannelId)){
-				client.Logger.LogError("Could not modify message - channel not found.");
+				client.Logger.LogError(LogEvent.UpdateMessage, "Could not modify message - channel not found.");
 				return;
 			}
 			DiscordMessage message;
 			try {
 				message = await guild.Channels[this.ChannelId].GetMessageAsync(this.MessageId);
 			} catch (Exception ex) {
-				client.Logger.LogError(ex, "Could not modify message - error retrieving message.");
+				client.Logger.LogError(LogEvent.UpdateMessage, ex, "Could not modify message - error retrieving message.");
 				return;
 			}
 			try {
 				await message.ModifyAsync(embed: newEmbed);
 			} catch (Exception ex) {
-				client.Logger.LogError(ex, "Could not modify message - error while editing message.");
+				client.Logger.LogError(LogEvent.UpdateMessage, ex, "Could not modify message - error while editing message.");
 				return;
 			}
 		}

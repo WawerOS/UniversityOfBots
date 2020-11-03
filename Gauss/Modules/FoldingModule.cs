@@ -36,7 +36,7 @@ namespace Gauss.Modules {
 					Path.Join(this._config.ConfigDirectory, "foldingdata.json")
 				);
 			} catch (Exception) {
-				this._client.Logger.LogInformation($"Could not restore F@H data. Starting new record.");
+				this._client.Logger.LogInformation(LogEvent.Folding, $"Could not restore F@H data. Starting new record.");
 				_previousStats = new Dictionary<int, FoldingStatus>();
 			}
 
@@ -47,7 +47,7 @@ namespace Gauss.Modules {
 			while (now > scheduleStart) {
 				scheduleStart += _timeSpan;
 			}
-			this._client.Logger.LogInformation($"F@H updates start at {scheduleStart:yyyy-MM-dd HH:mm}");
+			this._client.Logger.LogInformation(LogEvent.Folding, $"F@H updates start at {scheduleStart:yyyy-MM-dd HH:mm}");
 
 			this._scheduler.AddTask(
 				new CyclicTask(
@@ -67,7 +67,7 @@ namespace Gauss.Modules {
 					await this._client.Guilds[item.Key].Channels[item.Value.FoldingChannel].SendMessageAsync(
 						"[Encountered an error trying to get statistics.]"
 					);
-					this._client.Logger.LogError(ex, $"Could not retrieve F@H data.");
+					this._client.Logger.LogError(LogEvent.Folding, ex, $"Could not retrieve F@H data.");
 					return;
 				}
 				bool hasPreviousValue = false;
@@ -103,7 +103,7 @@ namespace Gauss.Modules {
 						footer
 					);
 				} catch (Exception ex) {
-					this._client.Logger.LogError(ex, $"Could not post F@H update.");
+					this._client.Logger.LogError(LogEvent.Folding, ex, $"Could not post F@H update.");
 				}
 				if (!hasPreviousValue) {
 					this._previousStats.Add(stats.Team, stats);

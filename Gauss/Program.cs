@@ -29,7 +29,6 @@ namespace Gauss {
 			await Task.Delay(-1);
 		}
 
-
 		private static void HandleExit(object sender, EventArgs e) {
 			_botInstance.Disconnect();
 		}

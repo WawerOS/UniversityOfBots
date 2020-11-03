@@ -9,9 +9,22 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using Gauss.Utilities;
+using Microsoft.Extensions.Logging;
 
 namespace Gauss.Models {
+	public class LogConfig {
+		[JsonProperty("filename")]
+		public string Filename { get; set; }
+
+		[JsonProperty("level")]
+		public LogLevel LogLevel { get; set; }
+
+		[JsonProperty("console")]
+		public bool LogToConsole {get; set;}
+	}
+
 	public class GuildConfig {
+
 		[JsonProperty("folding_team")]
 		public string FoldingTeam { get; set; }
 		[JsonProperty("folding_channel")]
@@ -29,6 +42,9 @@ namespace Gauss.Models {
 
 	public class GaussConfig {
 		private static string _directory;
+
+		[JsonProperty("logging")]
+		public LogConfig LogConfig {get;set;}
 
 		[JsonProperty("discord_token")]
 		public string DiscordToken { get; set; }

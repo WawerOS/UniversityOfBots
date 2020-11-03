@@ -21,6 +21,7 @@ using Gauss.CommandAttributes;
 using Gauss.Commands;
 using Gauss.Converters;
 using Gauss.Database;
+using Gauss.Logging;
 using Gauss.Models;
 using Gauss.Modules;
 using Gauss.Scheduling;
@@ -38,13 +39,13 @@ namespace Gauss {
 
 		public void RegisterModule(TypeInfo type, IServiceProvider services) {
 			if (type.CustomAttributes.OfType<ModuleInactiveAttribute>().Count() > 0) {
-				this._client.Logger.LogInformation($"Module '{type.Name}' is marked inactive.");
+				this._client.Logger.LogInformation(LogEvent.Module, $"Module '{type.Name}' is marked inactive.");
 				return;
 			}
 			this._modules.Add(
 				ActivatorUtilities.CreateInstance(services, type)
 			);
-			this._client.Logger.LogInformation($"Module '{type.Name}' registered and active.");
+			this._client.Logger.LogInformation(LogEvent.Module, $"Module '{type.Name}' registered and active.");
 		}
 
 		public void RegisterModules(Assembly assembly, IServiceProvider services) {
@@ -52,15 +53,17 @@ namespace Gauss {
 			foreach (var module in modules) {
 				this.RegisterModule(module, services);
 			}
-			_client.Logger.LogInformation($"Found {modules.Count()} non-command modules");
+			_client.Logger.LogInformation(LogEvent.Module, $"Found {modules.Count()} non-command modules");
 		}
 
 		public GaussBot(GaussConfig config) {
 			this._config = config;
 			this._client = new DiscordClient(new DiscordConfiguration {
+				LoggerFactory = new GaussLoggerFactory(config.LogConfig),
 				Intents = DiscordIntents.AllUnprivileged | DiscordIntents.GuildMembers,
 				Token = config.DiscordToken,
 			});
+
 
 			this._scheduler = new Scheduler(this._client);
 			var commandServices = new ServiceCollection()
@@ -107,7 +110,7 @@ namespace Gauss {
 
 		private Task OnGuildAvailable(DiscordClient client, GuildCreateEventArgs e) {
 			// Get the member list cached, otherwise certain features don't work correctly.
-			return Task.Run( async () => await e.Guild.RequestMembersAsync());
+			return Task.Run(async () => await e.Guild.RequestMembersAsync());
 		}
 
 		private Task OnClientReady(DiscordClient client, ReadyEventArgs e) {
@@ -132,7 +135,7 @@ namespace Gauss {
 					e.Context.Message.CreateReactionAsync(DiscordEmoji.FromUnicode("Could not determine a server to execute this command for."));
 				}
 
-			} else if(e.Exception is ArgumentException) {
+			} else if (e.Exception is ArgumentException) {
 				if (e.Command != null) {
 					var command = e.Command;
 					var sb = new StringBuilder();
@@ -157,15 +160,12 @@ namespace Gauss {
 					} else {
 						e.Context.Member.SendMessageAsync($"Invalid syntax for `{e.Command.QualifiedName}`. Syntax:\n{sb}");
 					}
-
-				} 
-				
-			
+				}
 			}
 			this._client.Logger.LogError(
+					LogEvent.Module,
 					e.Exception,
-					$"Someone tried executing an unknown command.",
-					DateTime.Now
+					$"Someone tried executing an unknown command."
 				);
 			return Task.CompletedTask;
 		}
