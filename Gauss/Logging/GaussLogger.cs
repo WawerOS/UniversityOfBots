@@ -13,7 +13,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Gauss.Logging {
 	internal class GaussLogger : ILogger {
-		private readonly LogLevel _currentLevel;
 		private readonly object _lock = new object();
 		private readonly LogConfig _logConfig;
 

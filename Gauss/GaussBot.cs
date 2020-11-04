@@ -69,6 +69,7 @@ namespace Gauss {
 			var commandServices = new ServiceCollection()
 				.AddDbContext<UserSettingsContext>(ServiceLifetime.Singleton)
 				.AddDbContext<GuildSettingsContext>(ServiceLifetime.Singleton)
+				.AddSingleton(new CalendarAccessor(this._config, this._client.Logger))
 				.AddSingleton(new ReputationRepository(config.ConfigDirectory))
 				.AddSingleton(new ReminderRepository(config.ConfigDirectory))
 				.AddSingleton(new ElectionRepository(config.ConfigDirectory))

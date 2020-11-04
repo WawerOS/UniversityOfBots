@@ -38,6 +38,9 @@ namespace Gauss.Models {
 
 		[JsonProperty("vote_channel")]
 		public ulong VoteChannel { get; set; }
+
+		[JsonProperty("calendar_id")]
+		public string CalendarId {get;set;}
 	}
 
 	public class GaussConfig {
