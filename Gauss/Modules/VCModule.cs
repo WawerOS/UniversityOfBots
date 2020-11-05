@@ -15,16 +15,9 @@ using Gauss.Models;
 using Gauss.Utilities;
 
 namespace Gauss.Modules {
-	public class VoiceChannelChangeEvent {
-		public DiscordChannel Channel { get; set; }
-		public DiscordUser User { get; set; }
-		public bool HasJoined { get; set; } // true: joined. false: left.
-	}
-
 	public class VCModule : BaseModule {
 		private readonly GaussConfig _config;
 		private readonly UserSettingsContext _settings;
-
 
 		public VCModule(DiscordClient client, GaussConfig config, UserSettingsContext settings) {
 			this._config = config;
@@ -32,48 +25,60 @@ namespace Gauss.Modules {
 			client.VoiceStateUpdated += this.HandleVoiceStateEvent;
 		}
 
-		private async Task NotifyUsers(DiscordGuild guild, DiscordUser joinedUser, DiscordChannel channel) {
-			var configs = from config in _settings.UserVoiceSettings
-						  where config.GuildId == guild.Id
-							  && config.IsInTimeout == false
-							  && config.IsActive == true
-						  select config;
+		private Task HandleJoinVoiceChat(DiscordGuild guild, DiscordUser user, DiscordChannel channel) {
 
-			foreach (var config in configs) {
-				if (channel.Users.Any(user => user.Id == config.UserId)) {
-					continue;
-				}
-				if (config.UserId == joinedUser.Id) {
-					config.IsInTimeout = true;
-					continue;
+			return Task.Run(async () => {
+				await Task.Delay(TimeSpan.FromSeconds(10));
+				if (channel.Users.Count() == 0) {
+					return;
 				}
 
-				if (config.FilterMode != FilterMode.Disabled && config.TargetUsers.Count > 0) {
-					var joinedUserOnList = config.TargetUsers.Any(y => y.UserId == joinedUser.Id);
-					if (config.FilterMode == FilterMode.Whitelist && !joinedUserOnList) {
-						continue;
-					}
-					if (joinedUserOnList && config.FilterMode == FilterMode.Blacklist) {
-						continue;
+				// Check only certain categories:
+				if (!channel.ParentId.HasValue || this._config.VoiceNotificationCategories.Contains(channel.ParentId.Value)) {
+					return;
+				}
+				// Only alert for users who have VC notifications enabled themselves:
+				var userConfig = this._settings.GetVoiceSettings(guild.Id, user.Id);
+				if (userConfig == null){
+					return;
+				}
+				userConfig.IsInTimeout = true;
+				var voiceUsers = this._settings.GetVoiceUsers(guild.Id);
+				foreach(var user in voiceUsers.Where(y => y.UserId != user.Id && y.CheckFilter(user.Id))){
+					try {
+						var member = guild.Members[user.UserId];
+						var matchingStatus = member?.Presence != null && member.Presence.Status.MatchesAvailability(user.TargetStatus);
+						if (!matchingStatus) {
+							continue;
+						}
+						await member.SendMessageAsync($"A user just joined the {channel.Name} voice channel in ${guild.Name}!");
+						user.IsInTimeout = true;
+					} catch (Exception ex) {
+						throw new Exception($"Exception while trying to notify {user.UserId} about voice chat. {ex}");
 					}
 				}
-
-				try {
-					var member = guild.Members[config.UserId];
-					var matchingStatus = member?.Presence != null && member.Presence.Status.MatchesAvailability(config.TargetStatus);
-					if (!matchingStatus) {
-						continue;
-					}
-					var dmChannel = await member.CreateDmChannelAsync();
-					await dmChannel.SendMessageAsync($"A user just joined the {channel.Name} voice channel!");
-					config.IsInTimeout = true;
-				} catch (Exception ex) {
-					throw new Exception($"Exception while trying to notify {config.UserId} about voice chat. {ex}");
-				}
-			}
-			_settings.SaveChanges();
+				_settings.SaveChanges();
+			});
 		}
 
+	
+		private void HandleLeaveVoiceChat(DiscordGuild guild, DiscordUser user, DiscordChannel channel) {
+			Task.Run(() => {
+				if (channel?.Users?.Count() == 0) {
+					Task.Run(async () => {
+						await Task.Delay(TimeSpan.FromSeconds(15));
+						if (channel?.Users?.Count() > 0) {
+							return;
+						}
+
+						foreach (var config in _settings.UserVoiceSettings.Where(x => x.GuildId == guild.Id)) {
+							config.IsInTimeout = false;
+						}
+						_settings.SaveChanges();
+					});
+				}
+			});
+		}
 
 		private Task HandleVoiceStateEvent(DiscordClient client, VoiceStateUpdateEventArgs e) {
 			/* 	3 possible events:
@@ -85,54 +90,20 @@ namespace Gauss.Modules {
 				C: User disconnects from voice.
 					-> Dispatch one LeftVoiceChannel event.
 			*/
-
+			Console.WriteLine($"VC event - before: {e.Before?.Channel?.Name}, after: {e.After?.Channel?.Name}, channel: {e.Channel?.Name}");
+			if (e.Before?.Channel == null && e.After?.Channel != null){
+				this.HandleJoinVoiceChat(e.Guild, e.User, e.Channel);
+			}
+			if (e.Before?.Channel != null && e.After?.Channel == null){
+				this.HandleLeaveVoiceChat(e.Guild, e.User, e.Before.Channel);
+			}
+			return Task.CompletedTask;
 			/*
-				Design questions:
-				- When to notify about a new voice chat? Options:
-					A: Notify about *any* channel going from 0 users to 1 user, regardless of other voice chats.
-						Example: Xorander joins General Voice 01 -> Notify IonSprite.
-								Ripple also joins General Voice 01: No additional notification.
-								Shortly after, Fritz joins General Voice 02 -> Notifiy IonSprite again.
-								And only when a channel is empty again can a new notification be send.
-
-					B: Notify per channel category.
-						Exmaple:  Xorander joins General Voice 01 -> Notify IonSprite.
-								Ripple joins General Voice 02 -> No additional notification.
-								And only when all voice channels in #General are empty again can a new notification be send.
-
-					C: Notify for every joined user when the would-be-notified user isn't in a voice chat themselves?
-						- Could end up spammy, especially when people join quickly.
-							- Could also lead to very strict whitelisting
-						... maybe that could work with some clever cooldown.
+				Exmaple:  Xorander joins General Voice 01 -> Notify IonSprite.
+						Ripple joins General Voice 02 -> No additional notification.
+						And only when all voice channels in #General are empty again can a new notification be send.
 			*/
-
-			return Task.Run(() => {
-				if (e.Before?.Channel == null && e.After?.Channel != null) {
-					if (!e.Channel.ParentId.HasValue || this._config.VoiceNotificationCategories.Contains(e.Channel.ParentId.Value)) {
-						return;
-					}
-					Task.Run(async () => {
-						await Task.Delay(TimeSpan.FromSeconds(10));
-						if (e.Channel.Users.Count() > 0) {
-							await NotifyUsers(e.Guild, e.User, e.After.Channel);
-						}
-					});
-				} else {
-					if (e.Before?.Channel?.Users?.Count() == 0) {
-						Task.Run(async () => {
-							await Task.Delay(TimeSpan.FromSeconds(15));
-							if (e.Before?.Channel?.Users?.Count() > 0) {
-								return;
-							}
-
-							foreach (var config in _settings.UserVoiceSettings.Where(x => x.GuildId == e.Guild.Id)) {
-								config.IsInTimeout = false;
-							}
-							_settings.SaveChanges();
-						});
-					}
-				}
-			});
 		}
+
 	}
 }

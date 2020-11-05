@@ -62,6 +62,18 @@ namespace Gauss.Database {
 			return result;
 		}
 
+		public List<UserVoiceSettings> GetVoiceUsers(ulong guildId){
+			List<UserVoiceSettings> results = null;
+			lock (_lock) {
+				results = (from vcnsettings in this.UserVoiceSettings
+					where vcnsettings.GuildId == guildId 
+						&& vcnsettings.IsActive 
+						&& !vcnsettings.IsInTimeout
+					select vcnsettings).ToList();
+			}
+			return results;
+		}
+
 		public void SetVoiceSettings(UserVoiceSettings settings) {
 			lock (_lock) {
 				if (this.UserVoiceSettings.Find(settings.GuildId, settings.UserId) == null) {
