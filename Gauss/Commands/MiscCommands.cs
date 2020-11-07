@@ -8,6 +8,7 @@ using System;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
 using Gauss.CommandAttributes;
 using Gauss.Database;
 using Gauss.Utilities;
@@ -18,19 +19,26 @@ namespace Gauss.Commands {
 	public class MiscCommands : BaseCommandModule {
 		private CalendarAccessor _calendar;
 
-		public MiscCommands(CalendarAccessor calendar)
-		{
+		public MiscCommands(CalendarAccessor calendar) {
 			this._calendar = calendar;
 		}
 
 		[Command("upcoming")]
-		public async Task GetEvents(CommandContext context){
+		[Aliases("nextevent")]
+		[Description("Get the next scheduled server event from the calendar.")]
+		public async Task GetEvents(CommandContext context) {
 			var nextEvent = await this._calendar.GetNextEvent(context.GetGuild().Id);
-			if (nextEvent == null){
+			if (nextEvent == null) {
 				await context.RespondAsync("No upcoming event found");
 				return;
-			}else{
-				await context.RespondAsync($"{nextEvent.Summary} at {nextEvent.Start.DateTime}");
+			} else {
+				await context.RespondAsync(
+					embed: new DiscordEmbedBuilder()
+						.WithTitle(nextEvent.Summary)
+						.WithDescription(nextEvent.Description)
+						.WithTimestamp(nextEvent.Start.DateTime)
+						.Build()
+				);
 			}
 		}
 

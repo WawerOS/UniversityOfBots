@@ -32,3 +32,15 @@
 **Examples**: `!g privacy`
 
 ---
+
+### upcoming
+
+**Description**: Fetches the next scheduled event on the server associated google calendar.
+
+**Parameters**: _none_
+
+**Aliases**: `nextevent`
+
+**Examples**: `!g upcoming`
+
+---
