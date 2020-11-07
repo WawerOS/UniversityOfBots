@@ -36,18 +36,15 @@ namespace Gauss.Models {
 				? this.Message
 				: this.Message.Substring(0, 47).Trim() + "...";
 
-			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
-				Color = DiscordColor.Blurple,
-				Footer = new DiscordEmbedBuilder.EmbedFooter() {
-				 	Text = $"{this.ID} • {messagePreview}"
-				},
-				Timestamp = this.DueDateUTC,
-			};
-			return embedBuilder.Build();
+			return new DiscordEmbedBuilder()
+				.WithColor(DiscordColor.Blurple)
+				.WithFooter($"{this.ID} • {messagePreview}")
+				.WithTimestamp(this.DueDateUTC)
+				.Build();
 		}
 
-		public bool IsDue(){
-			if (this.DueDateUser != null){
+		public bool IsDue() {
+			if (this.DueDateUser != null) {
 				return this.DueDateUser.Value.ToDateTimeUtc() <= DateTime.UtcNow;
 			}
 			return this.DueDateUTC <= DateTime.UtcNow;

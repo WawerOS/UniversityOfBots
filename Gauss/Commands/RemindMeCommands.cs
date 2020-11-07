@@ -35,15 +35,13 @@ namespace Gauss.Commands {
 			}
 
 			var zonedDateTime = Instant.FromDateTimeUtc(DateTime.UtcNow).InZone(timezone);
-			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
-				Color = DiscordColor.None,
-				Footer = new DiscordEmbedBuilder.EmbedFooter() {
-					Text = $"Current time: {zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id}"
-				},
-				Timestamp = zonedDateTime.ToDateTimeUtc(),
-			};
+			var embed = new DiscordEmbedBuilder()
+				.WithColor(DiscordColor.None)
+				.WithFooter($"Current time: {zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id}")
+				.WithTimestamp(zonedDateTime.ToDateTimeUtc())
+				.Build();
 
-			await context.RespondAsync(embed: embedBuilder.Build());
+			await context.RespondAsync(embed: embed);
 		}
 
 
@@ -56,15 +54,13 @@ namespace Gauss.Commands {
 			}
 
 			var zonedDateTime = Instant.FromDateTimeUtc(DateTime.UtcNow).InZone(timezone);
-			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
-				Color = DiscordColor.None,
-				Footer = new DiscordEmbedBuilder.EmbedFooter() {
-					Text = $"Current time: {zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id}"
-				},
-				Timestamp = zonedDateTime.ToDateTimeUtc(),
-			};
+			var embed = new DiscordEmbedBuilder()
+				.WithColor(DiscordColor.None)
+				.WithFooter($"Current time: {zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id}")
+				.WithTimestamp(zonedDateTime.ToDateTimeUtc())
+				.Build();
 
-			await context.RespondAsync(embed: embedBuilder.Build());
+			await context.RespondAsync(embed: embed);
 		}
 
 
@@ -72,15 +68,14 @@ namespace Gauss.Commands {
 		public async Task ConvertTime(CommandContext context, DateTime datetime) {
 			var timezone = this._repository.GetUserTimezone(context.User.Id);
 			var zonedDateTime = datetime.InTimeZone(timezone);
-			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
-				Color = DiscordColor.None,
-				Footer = new DiscordEmbedBuilder.EmbedFooter() {
-					Text = $"{zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id} in your local time: "
-				},
-				Timestamp = zonedDateTime.ToDateTimeUtc(),
-			};
 
-			await context.RespondAsync(embed: embedBuilder.Build());
+			await context.RespondAsync(
+				embed: new DiscordEmbedBuilder()
+					.WithColor(DiscordColor.None)
+					.WithFooter($"{zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id} in your local time:")
+					.WithTimestamp(zonedDateTime.ToDateTimeUtc())
+					.Build()
+			);
 		}
 
 		[Command("converttime")]
@@ -91,15 +86,13 @@ namespace Gauss.Commands {
 			}
 
 			var zonedDateTime = datetime.InTimeZone(timezone);
-			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
-				Color = DiscordColor.None,
-				Footer = new DiscordEmbedBuilder.EmbedFooter() {
-					Text = $"{zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id} in your local time: "
-				},
-				Timestamp = zonedDateTime.ToDateTimeUtc(),
-			};
-
-			await context.RespondAsync(embed: embedBuilder.Build());
+			await context.RespondAsync(
+				embed: new DiscordEmbedBuilder()
+					.WithColor(DiscordColor.None)
+					.WithFooter($"{zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id} in your local time:")
+					.WithTimestamp(zonedDateTime.ToDateTimeUtc())
+					.Build()
+			);
 		}
 
 		[Command("converttime")]

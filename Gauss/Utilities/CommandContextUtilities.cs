@@ -40,15 +40,14 @@ namespace Gauss.Utilities {
 		}
 
 		public static async Task CreateConfirmation(this CommandContext context, string message, Action onConfirm = null, Action onAbort = null) {
-			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
-				Title = "Confirm:",
-				Description = message,
+			var embed = new DiscordEmbedBuilder()
+				.WithTitle("Confirm:")
+				.WithDescription(message)
+				.WithColor(DiscordColor.Red)
+				.WithFooter($"{_confirmEmoji} to confirm, {_abortEmoji} to abort.")
+				.Build();
 
-			};
-			embedBuilder.Color = DiscordColor.Red;
-			embedBuilder.Footer = new DiscordEmbedBuilder.EmbedFooter() { Text = $"{_confirmEmoji} to confirm, {_abortEmoji} to abort." };
-
-			DiscordMessage botMessage = await context.RespondAsync(null, false, embedBuilder.Build());
+			DiscordMessage botMessage = await context.RespondAsync(null, false, embed);
 
 			await botMessage.CreateReactionAsync(_confirmEmoji);
 			await Task.Delay(250);

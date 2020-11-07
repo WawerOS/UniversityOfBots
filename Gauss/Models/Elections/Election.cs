@@ -85,11 +85,10 @@ namespace Gauss.Models.Elections {
 				"\n",
 				this.Candidates.Select((y) => $"{y.Option}) {y.Username}")
 			);
-			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder {
-				Title = $"Election for {this.Title} (ID: {this.ID})",
-				Color = DiscordColor.Blurple,
-				Timestamp = this.End,
-			};
+			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder()
+				.WithTitle($"Election for {this.Title} (ID: {this.ID})")
+				.WithColor(DiscordColor.Blurple)
+				.WithTimestamp(this.End);
 
 			if (this.Status != ElectionStatus.Decided) {
 				embedBuilder.Description = this.Description + "\n" +
@@ -104,7 +103,7 @@ namespace Gauss.Models.Elections {
 			}
 
 			if (this.Message != null) {
-				embedBuilder.Footer = new DiscordEmbedBuilder.EmbedFooter() { Text = this.GetHash() };
+				embedBuilder.WithFooter(this.GetHash());
 			}
 			return embedBuilder.Build();
 		}

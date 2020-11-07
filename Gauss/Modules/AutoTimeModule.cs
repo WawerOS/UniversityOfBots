@@ -69,13 +69,11 @@ namespace Gauss.Modules {
 							int.Parse(minuteRaw),
 							string.IsNullOrEmpty(secondRaw) ? 0 : int.Parse(secondRaw)
 						).InZoneLeniently(timezone);
-						await e.Message.Channel.SendMessageAsync(embed:
-							new DiscordEmbedBuilder() {
-								Footer = new DiscordEmbedBuilder.EmbedFooter {
-									Text = $"Above time ({date:HH:mm} {timezone.Id}) in your local time",
-								},
-								Timestamp = date.ToDateTimeUtc(),
-							}.Build()
+						await e.Message.Channel.SendMessageAsync(
+							embed: new DiscordEmbedBuilder()
+								.WithFooter($"Above time ({date:HH:mm} {timezone.Id}) in your local time")
+								.WithTimestamp(date.ToDateTimeUtc())
+							 	.Build()
 						);
 					} catch (Exception) {
 					}
