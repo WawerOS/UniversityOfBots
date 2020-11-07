@@ -38,7 +38,7 @@ namespace Gauss.Database {
 					using (var stream = new FileStream(Path.Join(this._config.ConfigDirectory, "google", $"{guildId}.json"), FileMode.Open, FileAccess.Read)) {
 						// The file token.json stores the user's access and refresh tokens, and is created
 						// automatically when the authorization flow completes for the first time.
-						string credPath = Path.Join("google", guildId.ToString());
+						string credPath = Path.Join(this._config.ConfigDirectory, "google", guildId.ToString());
 						credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
 							GoogleClientSecrets.Load(stream).Secrets,
 							Scopes,
@@ -90,6 +90,7 @@ namespace Gauss.Database {
 				request.ShowDeleted = false;
 				request.SingleEvents = true;
 				request.MaxResults = 1;
+				request.OrderBy = EventsResource.ListRequest.OrderByEnum.StartTime;
 
 				Events events = await request.ExecuteAsync();
 				if (events.Items != null && events.Items.Count > 0) {

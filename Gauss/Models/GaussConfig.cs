@@ -20,7 +20,7 @@ namespace Gauss.Models {
 		public LogLevel LogLevel { get; set; }
 
 		[JsonProperty("console")]
-		public bool LogToConsole {get; set;}
+		public bool LogToConsole { get; set; }
 	}
 
 	public class GuildConfig {
@@ -40,14 +40,14 @@ namespace Gauss.Models {
 		public ulong VoteChannel { get; set; }
 
 		[JsonProperty("calendar_id")]
-		public string CalendarId {get;set;}
+		public string CalendarId { get; set; }
 	}
 
 	public class GaussConfig {
 		private static string _directory;
 
 		[JsonProperty("logging")]
-		public LogConfig LogConfig {get;set;}
+		public LogConfig LogConfig { get; set; }
 
 		[JsonProperty("discord_token")]
 		public string DiscordToken { get; set; }
