@@ -136,8 +136,13 @@ namespace Gauss.Commands {
 				Candidate foundCandidate = null;
 				if (item.Length == 1) {
 					foundCandidate = election.Candidates.Find(y => y.Option.ToLower() == item.ToLower());
-				} else {
+				}
+				if (foundCandidate == null) {
 					foundCandidate = election.Candidates.Find(y => y.Username.ToLower() == item.ToLower());
+					if (foundCandidate == null) {
+						var foundMemberId = guild.FindMember(item)?.Id;
+						foundCandidate = election.Candidates.Find(y => y.UserId == foundMemberId);
+					}
 				}
 				if (foundCandidate == null) {
 					await context.RespondAsync($"Could not find `{item}` on the list of candidates.");
@@ -147,7 +152,7 @@ namespace Gauss.Commands {
 			}
 
 			var confirmationMessage = $"Do you approve of the following candidate(s) for {election.Title} and want to give them your vote?:\n\n"
-				+ $"{string.Join("\n", candidates.Select(y => " - " + y.Username))}\n\n"
+				+ $"{string.Join("\n", candidates.Select(y => " - <@" + y.UserId + ">"))}\n\n"
 				+ $"**Your vote can not be changed after confirmation. Make sure you selected all your approved candidates.**";
 
 
