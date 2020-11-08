@@ -83,7 +83,7 @@ namespace Gauss.Models.Elections {
 		internal DiscordEmbed GetEmbed() {
 			var optionsText = string.Join(
 				"\n",
-				this.Candidates.Select((y) => $"{y.Option}) <@{y.UserId}>")
+				this.Candidates.Select((y) => $"{y.Option}) {y.Username}")
 			);
 			DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder()
 				.WithTitle($"Election for {this.Title} (ID: {this.ID})")
