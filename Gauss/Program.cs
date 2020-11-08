@@ -16,7 +16,18 @@ namespace Gauss {
 	public class Program {
 		private static GaussBot _botInstance;
 		public async static Task Main(string[] args) {
+			var taskCompletion = new TaskCompletionSource<int>();
 			CultureInfo.CurrentCulture = new CultureInfo("C", false);
+			AppDomain.CurrentDomain.ProcessExit += (sender, e) => {
+				_botInstance.Disconnect();
+				taskCompletion.TrySetResult(1);
+			};
+			Console.CancelKeyPress += (sender, e) => {
+				_botInstance.Disconnect();
+				taskCompletion.TrySetResult(1);
+			};
+
+
 			string configDirectory = Path.Join(GetFolderPath(SpecialFolder.UserProfile), "GaussBot");
 
 			if (args.Length > 0 && args[0] == "--configDir") {
@@ -26,11 +37,7 @@ namespace Gauss {
 
 			_botInstance = new GaussBot(config);
 			_botInstance.Connect();
-			await Task.Delay(-1);
-		}
-
-		private static void HandleExit(object sender, EventArgs e) {
-			_botInstance.Disconnect();
+			await taskCompletion.Task;
 		}
 	}
 }

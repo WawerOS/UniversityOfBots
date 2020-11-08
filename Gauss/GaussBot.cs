@@ -176,6 +176,7 @@ namespace Gauss {
 		}
 
 		public void Disconnect() {
+			this._client.Logger.LogInformation("Disconnecting bot and shutting down.");
 			this._client.DisconnectAsync().GetAwaiter().GetResult();
 			this._client.Dispose();
 		}
