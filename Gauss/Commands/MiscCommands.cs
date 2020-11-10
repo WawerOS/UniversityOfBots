@@ -4,7 +4,6 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 **/
 
-using System;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -17,7 +16,7 @@ namespace Gauss.Commands {
 	[NotBot]
 	[CheckDisabled]
 	public class MiscCommands : BaseCommandModule {
-		private CalendarAccessor _calendar;
+		private readonly CalendarAccessor _calendar;
 
 		public MiscCommands(CalendarAccessor calendar) {
 			this._calendar = calendar;
