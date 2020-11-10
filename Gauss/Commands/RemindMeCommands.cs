@@ -34,7 +34,7 @@ namespace Gauss.Commands {
 				return;
 			}
 
-			var zonedDateTime = Instant.FromDateTimeUtc(DateTime.UtcNow).InZone(timezone);
+			var zonedDateTime = SystemClock.Instance.GetCurrentInstant().InZone(timezone);
 			var embed = new DiscordEmbedBuilder()
 				.WithColor(DiscordColor.None)
 				.WithFooter($"Current time: {zonedDateTime:yyyy-MM-dd HH:mm} {timezone.Id}")
