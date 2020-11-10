@@ -25,6 +25,7 @@ using Gauss.Logging;
 using Gauss.Models;
 using Gauss.Modules;
 using Gauss.Scheduling;
+using Gauss.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -132,79 +133,75 @@ namespace Gauss {
 		}
 
 		private Task Commands_CommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e) {
-			switch (e.Exception){
+			switch (e.Exception) {
 				case Checks​Failed​Exception checkException: {
-					if (checkException.FailedChecks.Any(ex => ex is CheckDisabledAttribute || ex is RequireAdminAttribute)) {
-						e.Context.Message.CreateReactionAsync(DiscordEmoji.FromUnicode("🚫"));
+						if (checkException.FailedChecks.Any(ex => ex is CheckDisabledAttribute || ex is RequireAdminAttribute)) {
+							e.Context.Message.CreateReactionAsync(DiscordEmoji.FromUnicode("🚫"));
+						}
+						if (checkException.FailedChecks.Any(ex => ex is NeedsGuildAttribute)) {
+							e.Context.Message.RespondAsync("Could not determine a server to execute this command for.");
+						}
+						break;
 					}
-					if (checkException.FailedChecks.Any(ex => ex is NeedsGuildAttribute)) {
-						e.Context.Message.RespondAsync("Could not determine a server to execute this command for.");
-					}
-					break;
-				}
 				case ArgumentException argumentException: {
-					if (e.Command != null) {
-						var command = e.Command;
-						var sb = new StringBuilder();
+						if (e.Command != null) {
+							var command = e.Command;
+							var sb = new StringBuilder();
 
-						foreach (var ovl in command.Overloads.OrderByDescending(x => x.Priority)) {
-							sb.Append('`')
-								.Append(command.QualifiedName);
+							foreach (var ovl in command.Overloads.OrderByDescending(x => x.Priority)) {
+								sb.Append('`')
+									.Append(command.QualifiedName);
 
-							foreach (var arg in ovl.Arguments) {
-								sb.Append(arg.IsOptional || arg.IsCatchAll
-									? " ["
-									: " <"
-								)
-								.Append(arg.Name)
-								.Append(arg.IsCatchAll ? "..." : "")
-								.Append(arg.IsOptional || arg.IsCatchAll ? ']' : '>');
+								foreach (var arg in ovl.Arguments) {
+									sb.Append(arg.IsOptional || arg.IsCatchAll
+										? " ["
+										: " <"
+									)
+									.Append(arg.Name)
+									.Append(arg.IsCatchAll ? "..." : "")
+									.Append(arg.IsOptional || arg.IsCatchAll ? ']' : '>');
+								}
+								sb.Append("`");
 							}
-							sb.Append("`");
+							if (e.Context.Channel.IsPrivate) {
+								e.Context.RespondAsync($"Invalid syntax for `{e.Command.QualifiedName}`. Syntax:\n{sb}");
+							} else {
+								e.Context.Member.SendMessageAsync($"Invalid syntax for `{e.Command.QualifiedName}`. Syntax:\n{sb}");
+							}
 						}
-						if (e.Context.Channel.IsPrivate) {
-							e.Context.RespondAsync($"Invalid syntax for `{e.Command.QualifiedName}`. Syntax:\n{sb}");
-						} else {
-							e.Context.Member.SendMessageAsync($"Invalid syntax for `{e.Command.QualifiedName}`. Syntax:\n{sb}");
-						}
+						break;
 					}
-					break;
-				}
 				case CommandNotFoundException ex: {
-					this._client.Logger.LogError(
-						LogEvent.Module,
-						e.Exception,
-						$"Someone tried executing an unknown command. {ex.CommandName}"
-					);
-					Fastenshtein.Levenshtein lev = new Fastenshtein.Levenshtein(ex.CommandName);
-					var bestGuess = e.Context.CommandsNext.RegisteredCommands.OrderBy(y => lev.DistanceFrom(y.Value.QualifiedName)).First().Value;
-					e.Context.RespondAsync($"Could not find command `{ex.CommandName}`. Did you mean `{bestGuess.QualifiedName}`?");
-					break;
-				}
-				case InvalidOperationException invalidOperationException: {
-					this._client.Logger.LogError(
-						LogEvent.Module,
-						e.Exception,
-						$"Someone tried executing a command, but it failed."
-					);
-					if (e.Context.Command is CommandGroup group){
-						var probableName = e.Context.Command.QualifiedName + " " + e.Context.RawArgumentString.Split(" ").First();
-						Fastenshtein.Levenshtein lev = new Fastenshtein.Levenshtein(probableName);
-						var bestGuess = group.Children.OrderBy(y => lev.DistanceFrom(y.QualifiedName)).First();
-						e.Context.RespondAsync($"Could not find command `{probableName}`. Did you mean `{bestGuess.QualifiedName}`?");
+						this._client.Logger.LogError(
+							LogEvent.Module,
+							e.Exception,
+							$"Someone tried executing an unknown command. {ex.CommandName}"
+						);
+						e.Context.GuessCommand(ex.CommandName);
+						break;
 					}
-					break;
-				}
+				case InvalidOperationException invalidOperationException: {
+						this._client.Logger.LogError(
+							LogEvent.Module,
+							e.Exception,
+							$"Someone tried executing a command, but it failed."
+						);
+						if (e.Context.Command is CommandGroup group) {
+							var probableName = e.Context.Command.QualifiedName + " " + e.Context.RawArgumentString.Split(" ").First();
+							e.Context.GuessCommand(probableName);
+						}
+						break;
+					}
 				default: {
-					this._client.Logger.LogError(
-						LogEvent.Module,
-						e.Exception,
-						$"Someone tried executing a command, but it failed."
-					);
-					break;
-				}
+						this._client.Logger.LogError(
+							LogEvent.Module,
+							e.Exception,
+							$"Someone tried executing a command, but it failed."
+						);
+						break;
+					}
 			}
-		
+
 			return Task.CompletedTask;
 		}
 

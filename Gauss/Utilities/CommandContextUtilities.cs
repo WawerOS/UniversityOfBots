@@ -8,12 +8,11 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
-using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
+using FuzzySharp;
 
 namespace Gauss.Utilities {
 	public static class ContextExtensions {
@@ -29,6 +28,26 @@ namespace Gauss.Utilities {
 					);
 			}
 			return context.Guild;
+		}
+
+		public static void GuessCommand(this CommandContext context, string query) {
+			// TODO: Aliases should probably be searched as well.
+			var bestGuess = context.CommandsNext.RegisteredCommands
+				.OrderBy(y => Fuzz.Ratio(y.Value.QualifiedName, query))
+				.Last()
+				.Value;
+
+			if (Fuzz.Ratio(bestGuess.QualifiedName, query) < 60) {
+				bestGuess = null;
+			}
+
+			if (bestGuess != null) {
+				context.RespondAsync(
+					$"Could not find command `{query}`. Did you mean `{bestGuess.QualifiedName}`?"
+				);
+			} else {
+				context.RespondAsync($"Could not find command `{query}`.");
+			}
 		}
 
 		public static async Task<DiscordChannel> GetDMChannel(this CommandContext context) {
