@@ -88,12 +88,12 @@ namespace Gauss.Commands {
 		}
 
 		[Command("vote")]
-		[Description("Vote for one or more candidates. The voting system is approval voting.")]
+		[Description("Vote for one or more candidates (approval voting). Be sure to select all candidates before confirming your ballot.")]
 		public async Task VoteFor(
 			CommandContext context,
 			[Description("ID of the election you want to vote in")]
 			ulong electionId,
-			[Description("The candidates you approve. Either by their full username or their assigned letter.")]
+			[Description("All candidates you approve. Either by their full username or their assigned letter.")]
 			params string[] approvals
 		) {
 			var guild = context.GetGuild();
@@ -151,7 +151,7 @@ namespace Gauss.Commands {
 				candidates.Add(foundCandidate);
 			}
 
-			var confirmationMessage = $"Do you approve of the following candidate(s) for {election.Title} and want to give them your vote?:\n\n"
+			var confirmationMessage = $"Please confirm that these are the correct candidate(s) you approve of for {election.Title} and that your ballot is complete?:\n\n"
 				+ $"{string.Join("\n", candidates.Select(y => " - <@" + y.UserId + ">"))}\n\n"
 				+ $"**Your vote can not be changed after confirmation. Make sure you selected all your approved candidates.**";
 
