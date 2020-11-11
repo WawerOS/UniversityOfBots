@@ -6,6 +6,7 @@
 **/
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
@@ -30,20 +31,30 @@ namespace Gauss.Utilities {
 			return context.Guild;
 		}
 
-		public static void GuessCommand(this CommandContext context, string query) {
-			// TODO: Aliases should probably be searched as well.
-			var bestGuess = context.CommandsNext.RegisteredCommands
-				.OrderBy(y => Fuzz.Ratio(y.Value.QualifiedName, query))
-				.Last()
-				.Value;
+		public static IEnumerable<Command> FlattenCommand(Command command) {
+			var results = new List<Command>() { command };
+			if (command is CommandGroup group) {
+				results.AddRange(group.Children.SelectMany(FlattenCommand));
+			}
+			return results;
+		}
 
-			if (Fuzz.Ratio(bestGuess.QualifiedName, query) < 60) {
+		public static void GuessCommand(this CommandContext context, string query) {
+			var searchedCommands = context.CommandsNext.RegisteredCommands.Values
+				.SelectMany(FlattenCommand)
+				.Select(y => new { name = y.QualifiedName, score = Fuzz.Ratio(y.QualifiedName, query) });
+
+			var bestGuess = searchedCommands
+				.OrderBy(y => y.score)
+				.Last();
+
+			if (bestGuess.score < 60) {
 				bestGuess = null;
 			}
 
 			if (bestGuess != null) {
 				context.RespondAsync(
-					$"Could not find command `{query}`. Did you mean `{bestGuess.QualifiedName}`?"
+					$"Could not find command `{query}`. Did you mean `{bestGuess.name}`?"
 				);
 			} else {
 				context.RespondAsync($"Could not find command `{query}`.");
@@ -79,7 +90,7 @@ namespace Gauss.Utilities {
 						return false;
 					}
 					return x.Message == botMessage &&
-				 		(x.Emoji == _confirmEmoji || x.Emoji == _abortEmoji);
+						 (x.Emoji == _confirmEmoji || x.Emoji == _abortEmoji);
 				},
 				TimeSpan.FromMinutes(1)
 			);
