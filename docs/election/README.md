@@ -42,6 +42,8 @@
 
 ### election vote
 
+**IMPORTANT**: You must specify all candidates you want to approve at once. If you confirmed your choices, you can not approve additional candidates after.
+
 **Description**: Participate in an election! This command is for a simple approval vote. You can approve just one candidate or all of them - or any number in between.
 
 The election will be decided by who gets the most approvals. If multiple candidates can win, the candidates with the most approvals will be selected.
@@ -82,7 +84,7 @@ For more details on how approval voting works, see this [wikipedia article](http
 **Two step process**:
 
 This command uses a two-step process for comitting your vote. The bot will relay your vote in detail and ask you to verify your choice.
-Click the checkmark reaction to confirm the vote or the cross reaction to abort. Once you confirmed your vote, you can not change or retract it.
+Click the checkmark reaction to confirm the vote or the cross reaction to abort. **Once you confirmed your vote, you can not change, amend, or retract it.**
 
 <img src="./img/vote_confirm.png" />
 
