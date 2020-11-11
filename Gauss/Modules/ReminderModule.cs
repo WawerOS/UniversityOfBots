@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus;
-using Gauss.Models;
 using Gauss.Database;
 using Gauss.Scheduling;
 

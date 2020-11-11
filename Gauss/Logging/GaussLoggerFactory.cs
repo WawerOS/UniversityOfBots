@@ -5,8 +5,6 @@
 **/
 
 using System;
-using System.Collections.Generic;
-using DSharpPlus;
 using Gauss.Models;
 using Microsoft.Extensions.Logging;
 

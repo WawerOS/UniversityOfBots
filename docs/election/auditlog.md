@@ -2,7 +2,7 @@
 
 This log contains an entry for every action that changes the state of the election poll, with a hash of the state both before the change and after the change (where applicable).
 
-The idea is, that every change on the election data is traceable trough a the hash. If the data is tampered with or corrupted, a hash will deviate from what users get back from the bot and the results can be contested. 
+The idea is, that every change on the election data is traceable trough a the hash. If the data is tampered with or corrupted, a hash will deviate from what users get back from the bot and the results can be contested.
 
 This system is not perfect, but it's a relatively easy solution to ensure that the results are authentic without logging each voters individual votes.
 
